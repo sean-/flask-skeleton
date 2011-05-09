@@ -2,17 +2,27 @@
 
    git clone git@github.com:sean-/flask-skeleton.git
 
+0a)
+
+   # I use tcsh(1) for day-to-day use and then sh(1) for scripting. Most
+   # bash(1) enthusiests don't have enough perspective to have an opinion
+   # worth listening to. New tcsh users, enjoy the up-arrow history.
+   less .cshrc
+   chsh /bin/tcsh
+   mv .cshrc ~/
+   exec /bin/tcsh
+
 1) Remove the reminants of git:
 
    rm -rf .git .gitignore
 
 2) Rename from 'skeleton' to 'myapp':
 
-   # At some point I'll change this step to be a script
+   # At some point I'll change this step to be scripted
    find . -type f -print0 | xargs -0 -n 1 perl -p -e '#skeleton#myapp#go'
    mv skeleton myapp
 
-3) Setup fossil (preferred SCM of choice atm: http://www.fossil-scm.org/):
+3) Setup fossil (my preferred SCM of choice atm: http://www.fossil-scm.org/):
 
    alias fs fossil
    mkdir -p ~/src/.fossils
@@ -42,7 +52,6 @@
 
 6) Activate the virtualenv:
 
-   # tcsh for use, sh for shell scripts. Bash? wossat?
    source bin/activate.csh
 
 7) Pull in the required packages. This step is a bit goofy with the two
@@ -73,9 +82,17 @@
 9) Initialize the database:
 
    # This isn't done yet in the skeleton
-   ./create_db.py
+   python create_db.py
 
-10) In production, you will need to combine all of your static assets
+10) Setup caching:
+
+    # Also yet-to-be-documented
+
+11) Run the app:
+
+    python runserver.py
+
+12) In production, you will need to combine all of your static assets
     together and probably have them served by nginx. Something like:
 
     mkdir static
