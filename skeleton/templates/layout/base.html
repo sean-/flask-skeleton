@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
   {% block head %}
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="static/style.css"/>
   <title>Skeleton Flask App!!</title>
   {% endblock %}
   {% block html_head %}{% endblock %}
@@ -12,7 +12,10 @@
 <body>
   <div id="topnav">
     <ul>
+      <li><a href="{{ url_for('home.index') }}">Home Index</a></li>
       <li><a href="{{ url_for('mod1.index') }}">Mod1 View</a></li>
+      <li><a href="{{ url_for('mod2.index') }}">Mod2 View</a></li>
+      <li><a href="{{ url_for('mod3.some_random_view') }}">Mod3 View</a></li>
     </ul>
   </div>
   <div id="content">{% block content %}{% endblock %}</div>

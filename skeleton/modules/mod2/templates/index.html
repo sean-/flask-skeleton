@@ -9,8 +9,9 @@
 {% block content %}
 <h1>mod2 index!</h1>
 <p class="important">Welcome to the mod2 module! <a href="{{ url_for('static', filename='asset.txt') }}">mod2 asset (note 'static' and not '.static')</a></p>
+<p>mod2 demonstrates adding a second url_prefix to an app (e.g. '<code>/mod2</code>'). Note trailing slashes.</p>
 {% endblock %}
 {% block footer %}
 {{ super() }}
-Nothing interesting to say here.
+Nothing interesting to say from mod2.
 {% endblock %}

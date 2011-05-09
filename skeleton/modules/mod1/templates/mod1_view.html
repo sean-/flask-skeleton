@@ -8,5 +8,14 @@
 {% endblock %}
 {% block content %}
 <h1>/mod1_view</h1>
-<p class="important">Welcome to the mod1 module! <a href="{{ url_for('.static', filename='mod1/asset.txt') }}">mod1 asset</a></p>
+<p class="important">Welcome to the mod1 module! <a href="{{ url_for('.static', filename='mod1/asset.txt') }}">mod1 asset (note '.static', not 'static')</a></p>
+<p>mod1 demonstrates adding a module to the root prefix</p>
+
+{% endblock %}
+{% block footer %}
+{{ super() }}
+I acknowledge that the world would be a better place if there was less
+Windows, Java and Flash technology in existence (only commenting on energy
+consumption, not the merits of how terrible the respective technologies
+are).
 {% endblock %}

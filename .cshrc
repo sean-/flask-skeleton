@@ -1,13 +1,14 @@
-# Sean's .cshrc file: http://sean.chittenden.org/pubfiles/dot.cshrc.txt
+# Sean's .cshrc file. Why? 'cause bash(1) sucks and you won't look back once
+# you make the switch. Use sh(1) for scripts and tcsh(1) for your shell.
 #
-# System-wide /etc/csh.cshrc or ~/.cshrc file for tcsh(1).
+# Can be installed per-user at ~/.cshrc or system-wide at /etc/csh.cshrc
 
 # UTF-8 or go home.
 setenv LC_TYPE en_US.utf-8
 
 ### Set various path bits
 if ( ! $?newpath ) set newpath
-foreach d ($path /usr/local/sbin /usr/pkg/sbin /opt/local/sbin /usr/local/bin /usr/pkg/bin /opt/local/bin $HOME/sbin $HOME/bin $path)
+foreach d ($path /usr/local/sbin /opt/local/sbin /usr/local/bin /opt/local/bin $HOME/sbin $HOME/bin)
 	if ( -d $d ) then
 		set -f newpath = ( $newpath $d )
 	endif
@@ -18,13 +19,6 @@ unset newpath
 
 ### Handle various interactive components
 if ($?prompt) then
-	# Do the tcsh auto-source tab completion thang
-	foreach f (/opt/local/share/mercurial/contrib/tcsh_completion /usr/local/share/mercurial/contrib/tcsh_completion )
-		if ( -s $f ) then
-			source $f
-		endif
-	end
-
 	### Begin the autohost completion thang
 	set noglob
 	if ( ! $?hosts ) then
@@ -40,6 +34,9 @@ if ($?prompt) then
 		set f=`awk '/machine/ { print $2 }' < $HOME/.netrc` >& /dev/null
 		set hosts=($hosts $f)
 	endif
+	# This isn't perfect. If you've connected to a host via ssh on a
+	# different port, you may see: example.com:1234. Need to clean this
+	# up.
 	foreach f (/etc/ssh/known_hosts /etc/ssh_known_hosts $HOME/.ssh/known_hosts )
 		if ( -s $f ) then
 			set ssh_hosts=`grep -v '^#' $f | perl -p -e 's#\[([^\]]*)\]:(\d)#$1:$2#g' | cut -f 1 -d , | cut -f -1 -d ' '` >& /dev/null
@@ -66,8 +63,18 @@ if ($?prompt) then
 	complete scp "c,*:/,F:/," "c,*:,F:$HOME," 'c/*@/$hosts/:/'
 
 
-	# Aliases
-	alias ll ls -lAG
+	# OS-specific aliases. Be sure to copy and port aliases on new OS
+	# types.
+	switch ($OSTYPE)
+	case "freebsd":
+	case "darwin":
+		# FreeBSD's ls(1) uses the -G flag to enable color
+		alias ll ls -lAG
+		breaksw
+	default:
+		alias ll ls -lA
+		breaksw
+	endsw
 	alias rm rm -i
 	alias cp cp -i
 	alias mv mv -i
@@ -79,6 +86,7 @@ if ($?prompt) then
 	alias kscp scp -o GSSAPIAuthentication=yes -o GSSAPIDelegateCredentials=yes
 	alias kssh ssh -o GSSAPIAuthentication=yes -o GSSAPIDelegateCredentials=yes
 
+	# A few handy BSD aliases that I refuse to retire
 	alias altq_see pfctl -vvsq
 	alias pflog tcpdump -X -vvv -n -e -ttt -i pflog0
 	alias asterisk_cli asterisk -r
@@ -92,13 +100,16 @@ if ($?prompt) then
 	set complete = 'enhance'
 	set echo_stype = 'both'
 	set filec
-	set fignore = (\~ .svn CVS .o .bak)
+	set fignore = (\~ .bak .class CVS .git .o .pyc .svn)
 	set histdup = 'erase'
+	set histfile = ~/.history
 	set history = 10000
 	set implicitcd
 	set listjobs = long
 
-	/bin/mkdir -pm 0700 /tmp/tmp
+	# I like having a temp directory that I can stash things in knowing
+	# that it will be blown away. Significantly helps reduce clutter.
+	/bin/mkdir -pm 0700 /tmp/${USER}
 
 	if ( -d ~/Mail/inbox/new/ ) then
 		set mail = ~/Mail/inbox/new/
@@ -108,6 +119,7 @@ if ($?prompt) then
 	set promptchars = '%#'
 	set prompt = "%T %B%n%b@%m %# %L"
 	set rmstar
+	# There are days when I like having a prompt to the right of my cursor.
 #	set rprompt = "%~"
 	set savehist = 10000 merge
 	set time=(8 "\
@@ -128,12 +140,13 @@ Times of minor page faults              : %R")
 		bindkey -k down history-search-forward
 	endif
 
+	# I program using emacs and edit checkins or system files with
+	# vi(1). As such, I don't set an EDITOR variable globally.
 	setenv SVN_EDITOR vi
 	setenv CVS_RSH ssh
-	setenv M ~/src/stackjet/mercury
-	setenv MO $M/obj/contrib-`uname -s`-`uname -m`
 
-	# Change the behavior of the shell/environment based on the current directory
+	# Change the behavior of the shell/environment based on the current
+	# directory.
 	alias cwdcmd 'if (-o .enter.tcsh) source .enter.tcsh'
 	alias popd 'if ("\!*" == "" && -o .exit.tcsh) source .exit.tcsh; ""popd \!*'
 	alias cd 'if (-o .exit.tcsh) source .exit.tcsh; chdir \!*'

@@ -1,1 +1,8 @@
 local_settings.py
+**.bak
+**.pyc
+**.swp
+.Python
+bin/
+include/
+lib/
