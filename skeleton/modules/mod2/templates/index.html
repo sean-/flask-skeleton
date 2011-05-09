@@ -1,0 +1,16 @@
+{% extends "layout/base.html" %}
+{% block title %}index.html{% endblock %}
+{% block head %}
+{{ super() }}
+<style type="text/css">
+  .import { color: #336699; }
+</style>
+{% endblock %}
+{% block content %}
+<h1>mod2 index!</h1>
+<p class="important">Welcome to the mod2 module! <a href="{{ url_for('static', filename='asset.txt') }}">mod2 asset (note 'static' and not '.static')</a></p>
+{% endblock %}
+{% block footer %}
+{{ super() }}
+Nothing interesting to say here.
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "layout/base.html" %}
+{% block title %}mod3 index.html{% endblock %}
+{% block head %}
+{{ super() }}
+<style type="text/css">
+  .import { color: #336699; }
+</style>
+{% endblock %}
+{% block content %}
+<h1>mod3's some_random_view!!!!</h1>
+<p class="important">Welcome to the mod3 module! <a href="{{ url_for('.static', filename='mod3/asset.txt') }}">mod3 asset (note '.static' and not 'static')</a></p>
+<p>mod3 demonstrates adding a third url_prefix to an app (e.g. '<code>/mod3</code>'). Note trailing slashes.</p>
+{% endblock %}
+{% block footer %}
+{{ super() }}
+More uninteresting things to say from mod3.
+{% endblock %}

@@ -1,0 +1,4 @@
+Example mod2 Asset.
+
+URL:  $PROJECT_ROOT/skeleton/modules/mod2/static/asset.txt
+Path: http://127.0.0.1:5000/mod2/static/asset.txt

@@ -1,0 +1,1 @@
+Example mod1 Asset. Path: http://127.0.0.1:5000/static/mod1/asset.txt

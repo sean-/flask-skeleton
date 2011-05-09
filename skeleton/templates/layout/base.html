@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  {% block head %}
+  <link rel="stylesheet" href="style.css"/>
+  <title>Skeleton Flask App!!</title>
+  {% endblock %}
+  {% block html_head %}{% endblock %}
+</head>
+
+<body>
+  <div id="topnav">
+    <ul>
+      <li><a href="{{ url_for('mod1.index') }}">Mod1 View</a></li>
+    </ul>
+  </div>
+  <div id="content">{% block content %}{% endblock %}</div>
+  <hr/>
+  <div id="footer">
+    {% block footer %}
+    Copr. &copy; 2011 Wanker Soft Inc. All Rights Reserved.<br/>
+    By copying from this example, I promise to make the world to be a better place and suck just a little less than it did before I woke up this morning.
+    {% endblock %}
+  </div>
+</body>
+</html>

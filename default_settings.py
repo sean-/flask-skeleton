@@ -1,0 +1,33 @@
+# Global configuration
+DATABASE_URI_FMT = 'postgresql+psycopg2://{username}:{password}@{hostname}:{port}/{dbname}'
+DB_HOST = '127.0.0.1'
+DB_NAME = 'stackjet'
+DB_PASS = 'yaehachooz9Rahha7Ahz8AiRee3ahphe'
+DB_PORT = '5432'
+DB_SCHEMA = 'ops'
+DB_ADMIN = 'stackjet_admin'
+DB_USER = 'stackjet_admin'
+DEBUG = False
+SESSION_COOKIE_NAME = 'stackjet_session'
+TESTING = False
+
+# Generated via:
+# from os import urandom
+# urandom(256)
+SECRET_KEY = '\x9a\x19\x16\xe6\\@0\x03\x8dn\x1f*m\xd7DjF\x15\x81q\x1f\x9a\x18W\x94tu\xb1\xb0;\x97\xbfk\xb5BOut\xec\xb2\xa3?\x01\x918\r\xbc\xd5&\xees\xea\xa2ou\xc0,;\x04\xc6\xff\xb5\x7f\x93\xdd\x03\x86\r\rT\x10\xa1\xd7,\x12I-\xb6\xd5\xf3\xc3!\x9a\x80\xad\xf5\xd6\xbb\xbb\xe1{C\xdc\x99\x02^\xc7\xa6Od\x88\xe5\xf76\xaf\x08\xa0\x97\xcc9\x02\xf3\xab\xcf\xef1\x08\xa8\xb7\nG_\xf9|\xb8u8\x87\xd23\xba\xd6\xab3\xccA\xea)\x92\xa0Qrh$\x1a\xeb\x94k\xa8\xea\x95\xf1\xe1\x92\xb3\xbd\x9f\xf7=\xd6\xa7)IhG\xab#\xfc\xf1\xd4\xbc\xb2\xcdM\xa8N\xfd\x06\xbc8\x13vu=U\x80{/#\xed\x01\xd0\x17UH"\xf4\xd27\x81\'\xee\x02\x7f\xadY\xcd\x93%Z\xee\xd2\x11\x0b/\x10U\xd9\x80\xe1\xa2R+Vj\xa20\xc4q12)\xa5d6\xd7\xa0$\xeb)\t+d\xc7V\xc1\xe2W\xed\x8b\xcf\xee(m\x03\x14'
+
+# Import user-provided values
+try:
+    from local_settings import *
+except ImportError:
+    pass
+
+# Derived values
+SQLALCHEMY_DATABASE_URI = DATABASE_URI_FMT.format(**
+    {   'username': DB_USER,
+        'password': DB_PASS,
+        'hostname': DB_HOST,
+        'port':     DB_PORT,
+        'dbname':   DB_NAME,
+        'schema':   DB_SCHEMA,
+    })

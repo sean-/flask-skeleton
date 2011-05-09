@@ -1,0 +1,12 @@
+{% extends "layout/base.html" %}
+{% block title %}mod1_view.html{% endblock %}
+{% block head %}
+{{ super() }}
+<style type="text/css">
+  .import { color: #336699; }
+</style>
+{% endblock %}
+{% block content %}
+<h1>/mod1_view</h1>
+<p class="important">Welcome to the mod1 module! <a href="{{ url_for('.static', filename='mod1/asset.txt') }}">mod1 asset</a></p>
+{% endblock %}
