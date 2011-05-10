@@ -176,6 +176,11 @@ endif
 setenv SVN_EDITOR vi
 setenv CVS_RSH ssh
 
+# For tcsh's builtin ls command, ls-F
+setenv LS_COLORS 'no=00:fi=00:di=01;37:ln=01;36:pi=40;33:so=40;33:bd=40;33:cd=40;33:ex=01;32:*.sh=01;32:*.pl=01;32:*.bin=01;32:*.class=01;32:*.php=01;32:*.php3=01;32:*.js=01;32:*.tar=01;31:*.tgz=01;31:*.rpm=01;31:*.deb=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.rar=01;31:*.pkg=01;31:*.jpg=35:*.jpeg=35:*.gif=35:*.png=35:*.bmp=35:*.xbm=35:*.xpm=35:*.pm=35:*.xwd=35:*.pic=35:*.mp3=35:*.xcf=35:*.rm=35:*.avi=35:*.flac=35:*.ogg=35:*.mpg=35:*.wav=35:*.mpeg=35:*.ps=34:*.pdf=34:*.rtf=34:*.html=34:*.htm=34:*.xls=34:*.gnumeric=34:*.abw=34:*.tex=34:*.txt=34:*.doc=34:*.c=33:*.h=33:*.java=33:*.cc=33:*.hh=33:'
+set color = (ls-F)
+alias ls "ls-F"
+
 
 
 # Begin the auto-complete section for commands
@@ -191,6 +196,7 @@ set svn_cmds = (add blame praise annotate ann cat changelist cl checkout co clea
 complete -%*        c/%/j/                  # fill in the jobs builtin
 complete {fg,bg,stop} c/%/j/ p/1/"(%)"//
 complete alias      p/1/a/          # only aliases are valid
+complete bunzip2    'p/*/f:*.{bz2,tbz2}/'
 complete cd         p/1/d/
 complete chdir      p/1/d/
 complete chgrp      'p/1/g/'
@@ -252,6 +258,7 @@ complete gcc        c/-[IL]/d/ \
                     n/*/f:*.{c,C,cc,o,a,s,i}/
 complete gdb        n/-d/d/ n/*/c/
 complete git        'n/help/$git_cmds/' 'p/1/$git_cmds/'
+complete gunzip     'p/*/f:*.{gz2,tgz}/'
 complete limit      c/-/"(h)"/ n/*/l/
 complete man        'p/1/c/'
 complete mtr        'p/1/$hosts/'
@@ -269,6 +276,8 @@ complete su         c/--/"(login fast preserve-environment command shell help ve
 complete traceroute 'p/1/$hosts/'
 complete unalias    n/*/a/
 complete uncomplete p/*/X/
+complete unzip     'p/*/f:*.zip/'
+complete unxz      'p/*/f:*.xz/'
 complete unlimit    c/-/"(h)"/ n/*/l/
 complete unset      n/*/s/
 complete unsetenv 'p/1/e/'
