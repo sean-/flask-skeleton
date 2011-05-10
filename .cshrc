@@ -13,7 +13,7 @@ onintr -
 
 ### Set various path bits
 if ( ! $?newpath ) set newpath
-foreach d ($path /usr/bin /usr/sbin /bin /sbin /usr/local/sbin /opt/local/sbin /usr/local/bin /opt/local/bin $HOME/sbin $HOME/bin)
+foreach d (/usr/local/sbin /opt/local/sbin /usr/local/bin /opt/local/bin $HOME/sbin $HOME/bin /usr/bin /usr/sbin /bin /sbin $path)
 	if ( -d $d ) then
 		set -f newpath = ( $newpath $d )
 	endif
