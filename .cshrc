@@ -133,8 +133,8 @@ set listjobs = long
 # contents *will* be blown away. Significantly helps reduce disk clutter. Do
 # not use ~/tmp/ for sensitive material that needs to be securely deleted via
 # `rm -P`, shred(1) or srm(1).
-/bin/mkdir -pm 0700 /tmp/${USER}-tmp
-/bin/ln -sf /tmp/${USER}-tmp ~/tmp
+/bin/mkdir -pm 0700 /tmp/tmp.${USER}
+/bin/ln -sf /tmp/tmp.${USER} ~/tmp
 
 if ( -d ~/Mail/inbox/new/ ) then
 	set mail = ~/Mail/inbox/new/
