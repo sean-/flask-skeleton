@@ -13,7 +13,7 @@ onintr -
 
 ### Set various path bits
 if ( ! $?newpath ) set newpath
-foreach d ($path /usr/bin /usr/sbin /bin /sbin /test/path /usr/local/sbin /opt/local/sbin /usr/local/bin /opt/local/bin $HOME/sbin $HOME/bin)
+foreach d ($path /usr/bin /usr/sbin /bin /sbin /usr/local/sbin /opt/local/sbin /usr/local/bin /opt/local/bin $HOME/sbin $HOME/bin)
 	if ( -d $d ) then
 		set -f newpath = ( $newpath $d )
 	endif
@@ -134,7 +134,7 @@ set listjobs = long
 # not use ~/tmp/ for sensitive material that needs to be securely deleted via
 # `rm -P`, shred(1) or srm(1).
 /bin/mkdir -pm 0700 /tmp/tmp.${USER}
-/bin/ln -sf /tmp/tmp.${USER} ~/tmp
+if ( ! -l ~/tmp ) /bin/ln -sf /tmp/tmp.${USER} ~/tmp
 
 if ( -d ~/Mail/inbox/new/ ) then
 	set mail = ~/Mail/inbox/new/
