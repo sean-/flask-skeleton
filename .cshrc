@@ -77,7 +77,7 @@ case "darwin*":
 	alias ll ls -lAG
 	breaksw
 default:
-	alias ll ls -lA --color
+	alias ll ls -lA --color=auto
 	breaksw
 endsw
 alias rm rm -i
