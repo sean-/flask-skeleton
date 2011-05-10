@@ -255,6 +255,7 @@ complete git        'n/help/$git_cmds/' 'p/1/$git_cmds/'
 complete limit      c/-/"(h)"/ n/*/l/
 complete man        'p/1/c/'
 complete mtr        'p/1/$hosts/'
+complete ping       'p/1/$hosts/'
 complete popd       p/1/d/
 complete pushd      p/1/d/
 complete scp        'n/-P/$ssh_ports/' 'n/-o/$ssh_opts/' "c,*:/,F:/," "c,*:,F:$HOME," 'c/*@/$hosts/:/'
@@ -265,6 +266,7 @@ complete ssh        'p/1/$hosts/' 'n/-p/$ssh_ports/' 'n/-o/$ssh_opts/' 'p/2/c/'
 complete su         c/--/"(login fast preserve-environment command shell help version)"/ \
 		    c/-/"(f l m p c s -)"/ n/{-c,--command}/c/ \
 		    n@{-s,--shell}@'`cat /etc/shells`'@ n/*/u/
+complete traceroute 'p/1/$hosts/'
 complete unalias    n/*/a/
 complete uncomplete p/*/X/
 complete unlimit    c/-/"(h)"/ n/*/l/
@@ -285,6 +287,7 @@ case "darwin*":
 case "freebsd*":
 case "FreeBSD*":
     complete sysctl     'p/1/`sysctl -Na`/'
+    complete top 'n/-o/(cpu size res time pri threads total read write fault vcsw ivcsw jid)/'
     breaksw
 endsw
 
