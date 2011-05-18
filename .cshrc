@@ -134,7 +134,14 @@ set listjobs = long
 # not use ~/tmp/ for sensitive material that needs to be securely deleted via
 # `rm -P`, shred(1) or srm(1).
 /bin/mkdir -pm 0700 /tmp/tmp.${USER}
-if ( ! -l ~/tmp ) /bin/ln -sf /tmp/tmp.${USER} ~/tmp
+if ( -o /tmp/tmp.${USER} && -P0077 /tmp/tmp.${USER} == "0" ) then
+  if ( ! -l ~/tmp ) /bin/ln -sf /tmp/tmp.${USER} ~/tmp
+endif
+# Check to make sure someone didn't exploit a race condition
+if ( ! -o /tmp/tmp.${USER} || ! -P0077 /tmp/tmp.${USER} == "0" ) then
+  /bin/rm -f ~/tmp
+  echo "DANGER! DANGER! DANGER! Someone changed the mask or user of /tmp/tmp.${USER} during login! Removed ~/tmp shortcut as a precaution. Be careful on this system. You have been warned."
+endif
 
 if ( -d ~/Mail/inbox/new/ ) then
 	set mail = ~/Mail/inbox/new/
