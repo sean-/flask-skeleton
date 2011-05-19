@@ -9,10 +9,13 @@ DB_PASS = ''
 DB_PORT = '5432'
 DB_SCHEMA = 'skeleton_schema'
 DB_ADMIN = 'skeleton_admin'
-DB_USER = 'skeleton_admin'
+DB_USER = 'skeleton_www'
 DEBUG = False
 SESSION_COOKIE_NAME = 'skeleton_session'
 TESTING = False
+
+# Logs SQL queries to stderr
+SQLALCHEMY_ECHO = False
 
 # Generated via:
 # from os import urandom
