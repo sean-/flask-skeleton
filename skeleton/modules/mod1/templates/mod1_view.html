@@ -8,9 +8,12 @@
 {% endblock %}
 {% block content %}
 <h1>/mod1_view</h1>
-<p class="important">Welcome to the mod1 module! <a href="{{ url_for('.static', filename='mod1/asset.txt') }}">mod1 asset (note '.static', not 'static')</a></p>
-<p>mod1 demonstrates adding a module to the root prefix</p>
 
+<p class="important">Welcome to the mod1 module! <a href="{{ url_for('.static', filename='mod1/asset.txt') }}">mod1 asset (note '.static', not 'static')</a></p>
+
+<p>mod1 demonstrates adding a module to the root prefix. This html file is currently called mod1_view.html but would be more appropriately named index.html.</p>
+
+<p><a href="{{ url_for('list_all') }}">List the contents of the mod1.h2 table.</a><br/><a href="{{ url_for('list_one') }}">List one row in <code>mod1.h2</code>.</a></p>
 {% endblock %}
 {% block footer %}
 {{ super() }}
