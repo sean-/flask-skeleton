@@ -13,10 +13,10 @@
 <body>
   <div id="topnav">
     <ul>
-      <li><a href="{{ url_for('home.index') }}">Home Index</a></li>
-      <li><a href="{{ url_for('mod1.index') }}">Mod1 View</a></li>
-      <li><a href="{{ url_for('mod2.index') }}">Mod2 View</a></li>
-      <li><a href="{{ url_for('mod3.some_random_view') }}">Mod3 View</a></li>
+      <li><a href="{{ url_for('home.index') }}">Home Index</a> - The anchor for /</li>
+      <li><a href="{{ url_for('mod1.index') }}">Mod1 View</a> - Database Examples</li>
+      <li><a href="{{ url_for('mod2.index') }}">Mod2 View</a> - Redirect Examples</li>
+      <li><a href="{{ url_for('mod3.some_random_view') }}">Mod3 View</a> - Forms</li>
     </ul>
   </div>
   <div id="content">{% block content %}{% endblock %}</div>
