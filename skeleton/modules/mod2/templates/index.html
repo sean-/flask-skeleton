@@ -9,7 +9,13 @@
 {% block content %}
 <h1>mod2 index!</h1>
 <p class="important">Welcome to the mod2 module! <a href="{{ url_for('static', filename='asset.txt') }}">mod2 asset (note 'static' and not '.static')</a></p>
-<p>mod2 demonstrates adding a second url_prefix to an app (e.g. '<code>/mod2</code>'). Note trailing slashes.</p>
+
+<p>mod2 demonstrates adding a second url_prefix to an app (e.g. '<code>/mod2</code>'). Note that a trailing slash is added.</p>
+
+<h2>mod2 redirect examples</h2>
+
+<p>Redirects back to mod2's index: <a href="redirect_here">the bad way</a> and <a href="{{ url_for('redir_index') }}">good way</a>. And redirect examples back to home's index the <a href="redirect_home">bad way</a> and <a href="{{url_for('redir_index2')}}">good way</a>.</p>
+
 {% endblock %}
 {% block footer %}
 {{ super() }}
