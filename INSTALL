@@ -1,0 +1,110 @@
+0) Clone a copy of the skeleton:
+
+   git clone git@github.com:sean-/flask-skeleton.git
+
+0a)
+
+   # I use tcsh(1) for day-to-day use and then sh(1) for scripting. Most
+   # bash(1) enthusiasts don't have enough perspective to have an opinion
+   # worth listening to. New tcsh users, enjoy the up-arrow history.
+   less .cshrc     # _Always_ review changes to your shell config
+   mv .cshrc ~/    # Install the configured tcsh(1) hotness
+   exec /bin/tcsh  # Start using tcsh(1)
+   chsh /bin/tcsh  # Change your default shell once you feel comfortable
+
+1) Remove the remnants of git:
+
+   rm -rf .git .gitignore
+
+2) Rename from 'skeleton' to 'myapp':
+
+   # At some point I'll change this step to be scripted
+   find . -type f -print0 | xargs -0 -n 1 perl -p -i -e '#skeleton#myapp#go'
+   mv skeleton myapp
+   # Search for and replace the remaining references to 'skeleton'
+   egrep -ri skeleton *
+   find . | grep -i skeleton
+
+3) Setup fossil (my preferred SCM of choice atm: http://www.fossil-scm.org/):
+
+   alias fs fossil
+   mkdir -p ~/src/.fossils
+   fs new ~/src/.fossils/skeleton.fossil
+   fs open ~/src/.fossils/skeleton.fossil
+
+   # Settings generated via:
+   # fs set | grep local | awk '{print "fs set " $1 " " $3}'
+   fs set autosync 1
+   fs set clearsign 1
+   fs set editor vi
+   fs set ignore-glob bin/*,include/*,lib/*,local_settings.py,*.pyc
+   fs set localauth 0
+   fs set pgp-command gpg2
+   fs addremove
+   fs ci -m "Initial checkin of skeleton app"
+
+4) Start the database:
+
+   # MacPorts installed version of PostgreSQL 9.1
+   sudo su - postgres -c '/opt/local/lib/postgresql91/bin/postgres -D /opt/local/var/db/postgresql91/defaultdb'
+
+5) Create a virualenv for the skeleton:
+
+   # MacPorts installed version of Python 2.7
+   /opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/virtualenv --no-site-packages .
+
+6) Activate the virtualenv:
+
+   # If you installed the .cshrc file listed above and use tcsh(1), just do this:
+   chmod 0600 .enter.tcsh
+   cd $PWD
+
+   # To manually activate the virtualenv, run the following:
+   source bin/activate.csh
+
+7) Pull in the required packages. This step is a bit goofy due to using a
+   devel version of SQLAlchemy and PostgreSQL's pg_config being hidden away
+   out of the normal path.
+
+   # Run SQLAlchemy 0.7 or newer
+   pip install --download-cache=~/tmp -I -f http://surfnet.dl.sourceforge.net/project/sqlalchemy/sqlalchemy/0.7b4/SQLAlchemy-0.7b4.tar.gz sqlalchemy==0.7b4
+
+   # Install psycopg2 (~/tmp is created automatically via .cshrc)
+   env PATH=/opt/local/lib/postgresql91/bin/:${PATH} pip install --download-cache=~/tmp -I psycopg2
+
+   # Even thought requirements.txt ships with SQLAlchemy and psycopg2, remove
+   # them from the list of requirements for now.
+   cat requirements.txt | egrep -vi '^(SQLAlchemy==|psycopg2==)' > requirements.tmp
+   pip install --download-cache=~/tmp -I -r requirements.tmp --no-install
+   pip install --download-cache=~/tmp -I -r requirements.tmp --no-download
+   pip freeze | sort > requirements.txt
+   rm -f requirements.tmp
+
+8) Setup debugging:
+
+   echo 'DEBUG = True' >> local_settings.py
+   echo 'TESTING = True' >> local_settings.py
+
+   When you go in to production, be sure to remove these two lines!!!
+
+9) Initialize the database:
+
+   # This isn't done yet in the skeleton
+   python create_db.py
+
+10) Setup caching:
+
+    # Also yet-to-be-documented
+
+11) Run the app:
+
+    python runserver.py
+
+12) In production, you will need to combine all of your static assets
+    together and probably have them served by nginx. Something like:
+
+    mkdir static
+    cd static
+    find ../skeleton -name static
+    # Make a symlink for everything in to the static dir. e.g.:
+    # ln -s ../skeleton/modules/mod1/static mod1

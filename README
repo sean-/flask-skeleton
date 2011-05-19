@@ -1,102 +1,31 @@
-0) Clone a copy of the skeleton:
+Recently someone asked me what my preferred web framework was these days (it
+feels like I've tried them all and have developed a few opinions along the
+way). It's Flask (as of May 2011), but explaining the bootstrapping process
+required to get a new app up and running is a high enough that you can't
+easily expect a new programmer to figure it out. And this isn't unique to
+Flask, bootstrapping any framework is typically a tremendous pain in the
+ass... and it shouldn't have to be... yet still is. So!, invariably you end
+up wasting your afternoon looking up the required implementation details to
+stitch components that every application needs (e.g. a database, static
+files, caching). Bleh.
 
-   git clone git@github.com:sean-/flask-skeleton.git
+This skeleton app is has been hanging out in my ~/src/template_app directory
+for long enough and needs to see the light of day. It has grown to support
+multiple modules structured in a "ready-to-grow" way that shouldn't take
+hours of research to figure out how it was all put together or where the next
+set of work should go in order to get something running. All of the provided
+"scaffolding" resides somewhere under 'skeleton/' so that your friendly
+`egrep -r` command can find the desired string and cement your understanding
+of the layout. Read through the rest of the README for the relevant steps and
+details.
 
-0a)
+With Flask being the awesomest awesomesauce around (at least as of May 2011),
+hopefully this contribution from your neighborhood ghost in the machine will
+make Flask development a bit easier to get started with. If you find new
+tricks that are sensible, straightforward and will help other developers
+setup their apps in a non-fail way, let me know and I'll incorporate your
+changes (including improved documentation, unit tests and comments).  Cheers
+and good luck.
 
-   # I use tcsh(1) for day-to-day use and then sh(1) for scripting. Most
-   # bash(1) enthusiests don't have enough perspective to have an opinion
-   # worth listening to. New tcsh users, enjoy the up-arrow history.
-   less .cshrc
-   chsh /bin/tcsh
-   mv .cshrc ~/
-   exec /bin/tcsh
-
-1) Remove the reminants of git:
-
-   rm -rf .git .gitignore
-
-2) Rename from 'skeleton' to 'myapp':
-
-   # At some point I'll change this step to be scripted
-   find . -type f -print0 | xargs -0 -n 1 perl -p -e '#skeleton#myapp#go'
-   mv skeleton myapp
-
-3) Setup fossil (my preferred SCM of choice atm: http://www.fossil-scm.org/):
-
-   alias fs fossil
-   mkdir -p ~/src/.fossils
-   fs new ~/src/.fossils/skeleton.fossil
-   fs open ~/src/.fossils/skeleton.fossil
-
-   # Settings generated via:
-   # fs set | grep local | awk '{print "fs set " $1 " " $3}'
-   fs set autosync 1
-   fs set clearsign 1
-   fs set editor vi
-   fs set ignore-glob bin/*,include/*,lib/*,local_settings.py,*.pyc
-   fs set localauth 0
-   fs set pgp-command gpg2
-   fs addremove
-   fs ci -m "Initial checkin of skeleton app"
-
-4) Start the database (specifically for OS-X with Pg installed via ports):
-
-   # MacPorts installed version of PostgreSQL 9.1
-   sudo su - postgres -c '/opt/local/lib/postgresql91/bin/postgres -D /opt/local/var/db/postgresql91/defaultdb'
-
-5) Create a virualenv for the skeleton:
-
-   # MacPorts installed version of Python 2.7
-   /opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/virtualenv --no-site-packages .
-
-6) Activate the virtualenv:
-
-   source bin/activate.csh
-
-7) Pull in the required packages. This step is a bit goofy with the two
-   parts. This is mostly due to using SQLAlchemy 0.7 which isn't in PIP yet,
-   and having to find the path to pg_config(1) which isn't in the normal
-   search path.
-
-   # Run SQLAlchemy 0.7 or newer
-   pip install --download-cache=/tmp/sean -I -f http://surfnet.dl.sourceforge.net/project/sqlalchemy/sqlalchemy/0.7b4/SQLAlchemy-0.7b4.tar.gz sqlalchemy==0.7b4
-   # Install psycopg2
-   env PATH=/opt/local/lib/postgresql91/bin/:${PATH} pip install --download-cache=/tmp/sean -I psycopg2
-
-   # Even thought requirements.txt ships with SQLAlchemy and psycopg2, remove
-   # them from the list of requirements for now.
-   cat requirements.txt | egrep -vi '(SQLAlchemy==0.7b4|psycopg2==2.4)$' > requirements.tmp
-   pip install --download-cache=/tmp/${USER} -I -r requirements.tmp --no-install
-   pip install --download-cache=/tmp/${USER} -I -r requirements.tmp --no-download
-   pip freeze | sort > requirements.txt
-   rm -f requirements.tmp
-
-8) Setup debugging:
-
-   echo 'DEBUG = True' >> local_settings.py
-   echo 'TESTING = True' >> local_settings.py
-
-   When you go in to production, be sure to remove these two lines!!!
-
-9) Initialize the database:
-
-   # This isn't done yet in the skeleton
-   python create_db.py
-
-10) Setup caching:
-
-    # Also yet-to-be-documented
-
-11) Run the app:
-
-    python runserver.py
-
-12) In production, you will need to combine all of your static assets
-    together and probably have them served by nginx. Something like:
-
-    mkdir static
-    cd static
-    find ../skeleton -name static
-    # Make a symlink for everything in to the static dir. e.g.:
-    # ln -s ../skeleton/modules/mod1/static mod1
+To begin making use of this skeleton, step through the instructions in
+INSTALL.
