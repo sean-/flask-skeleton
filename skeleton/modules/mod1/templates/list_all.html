@@ -1,0 +1,24 @@
+{% extends "layout/base.html" %}
+{% block title %}mod1/list_all.html{% endblock %}
+{% block content %}
+<h1>mod1's list_all</h1>
+
+<table border="1">
+{% for entry in entries %}
+  <tr><td>{{ entry.id }}</td><td>{{ entry.val2 }}</td></tr>
+{% else %}
+  <tr><td colspan="2">No entries in <code>mod1.h2</code>. Inconceivable!!!</td></tr>
+{% endfor %}
+</table>
+
+<p><a href="{{ url_for('list_all') }}">List All Entries</a><br/><a href="{{ url_for('list_one') }}">List One Entries</a></p>
+{% endblock %}
+{% block footer %}
+{{ super() }}
+I acknowledge that the world would be a better place if there was less
+Windows, Java and Flash technology in existence (only commenting on energy
+consumption, not the merits of how terrible the respective technologies
+are).
+{% endblock %}
+
+
