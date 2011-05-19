@@ -1,7 +1,6 @@
 from skeleton import db
 
-# Note the conflicting variable and table name. autoload works well for basic
-# models but should be reserved for cases of laziness.
+# Note the conflicting variable and table name.
 class H2(db.Model):
     __table__ = db.Table(
         'h2', db.metadata,
