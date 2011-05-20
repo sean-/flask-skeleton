@@ -1,4 +1,5 @@
 # Global configuration
+CSRF_SESSION_KEY = ''
 DATABASE_URI_FMT = 'postgresql+psycopg2://{username}:{password}@{hostname}:{port}/{dbname}'
 DB_HOST = '127.0.0.1'
 DB_NAME = 'skeleton'
@@ -27,6 +28,18 @@ try:
     from local_settings import *
 except ImportError:
     pass
+
+# Add a small amount of anti-footshooting and check to make sure a CSRF
+# secret key is set of modest strength.
+if len(CSRF_SESSION_KEY) < 32:
+    # Generate a decently long random secret.
+    from os import urandom
+    import binascii
+    randsec = binascii.b2a_hex(urandom(32))
+    print "Generating a random secret for CSRF_SESSION_KEY. Copy/paste the following commands to setup a random non-fail secret.\n"
+    print '\techo "import binascii" >> local_settings.py'
+    print '\techo "CSRF_SESSION_KEY = binascii.a2b_hex(\'%s\')" >> local_settings.py\n' % randsec
+    raise ValueError('CSRF_SESSION_KEY needs to be set and longer than 32 characters (len(CSRF_SESSION_KEY) >= 32 recommended)!')
 
 # Add a small amount of anti-footshooting and check to make sure a password
 # is set. Idiots use passwords less than 16char. Just sayin'.
