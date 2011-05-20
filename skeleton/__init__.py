@@ -8,37 +8,14 @@ import sys
 __all__ = ['create_app','db']
 
 # A list of app modules and their prefixes. Each APP entry must contain a
-# 'name'.
-#
-# Models are always loaded at the time an app is loaded. Models are not used
-# to automatically generate schema in this setup. After several apps and
-# having iterated many times with SQLAlchemy to get the resulting schema
-# "just right," I finally realized that SQL is the right dialect to describe
-# your database's structure. Said differently, why use SQLAlchemy to describe
-# what PostgreSQL already does infinitely better? Use SQLAlchemy for what it
-# is especially good at: generating efficient SQL based on mappings between
-# Python classes and database tables. A few extra lines of code in the
-# various models goes a long ways towards clarity, predictability and
-# explicitness.
-#
-# Re: PostgreSQL vs other RDBMS'es. Portability to other relational databases
-# is not something I design for. PostgreSQL is faster, more stable, the most
-# standards conformant relational database and is rediculously feature
-# rich. Based purely on its technical merrits, the only two situations where
-# I would use a different relational database would be if my target hosting
-# platform did not support SystemV shared memory or was an embedded
-# device. Hell will have frozen over if MySQL, Oracle, DB2 or MS-SQL actually
-# produce a compelling reason to use their technology over PostgreSQL.
+# 'name', the remaining arguments are optional.
 MODULES = [
-#   {'name': 'foo',  'url_prefix': '/admin', 'models': ['Topic']   },
-    {'name': 'home', 'url_prefix': '/',      'models': ['h1','h3'] },
-    {'name': 'mod1', 'url_prefix': '/',      'models': ['h2'],     },
-    {'name': 'mod2', 'url_prefix': '/mod2'                         },
-    {'name': 'mod3', 'url_prefix': '/mod3'                         },
+#   {'name': 'foo',  'url_prefix': '/admin', 'models': True },
+    {'name': 'home', 'url_prefix': '/',      'models': True },
+    {'name': 'mod1', 'url_prefix': '/',      'models': True },
+    {'name': 'mod2', 'url_prefix': '/mod2'                  },
+    {'name': 'mod3', 'url_prefix': '/mod3',  'models': True },
 ]
-
-# models are added to the db's metadata when create_app() is actually called.
-db = SQLAlchemy()
 
 # Create the Skeleton app
 def create_app(name = __name__):
@@ -73,13 +50,54 @@ def create_app(name = __name__):
     csrf(app)
     return app
 
+# models are added to the db's metadata when create_app() is actually called.
+db = SQLAlchemy()
+
 # Load a module's models
 def load_module_models(app, module):
-    if not module.has_key('models'):
+    if not module.has_key('models') or module['models'] == False:
         return
 
-    for model in module['models']:
-        model_name = '%s.models.%s' % (module['name'], model)
-        if app.config['DEBUG']:
-            print '[MODEL] Loading db model %s' % (model_name)
-        mod = __import__(model_name)
+    model_name = module['name']
+    if app.config['DEBUG']:
+        print '[MODEL] Loading db model %s' % (model_name)
+    model_name = '%s.models' % (model_name)
+    mod = __import__(model_name)
+
+# SQL ORM Missive:
+#
+# Don't use models to automatically generate schemas. After iterating several
+# times with SQLAlchemy (and nearly every other ORM from frameworks both long
+# since dead and still trendy), to get a schema "just right" requires
+# entirely too much fiddling in the ORM. My hard earned lesson: SQL is the
+# right dialect to describe your database's structure (read: do not use an
+# ORM to generate DDL). Other than portability, what's the advantage of
+# describing your schema in SQLAlchemy?
+#
+# For as fantastic as SQLAlchemy is, using SQLAlchemy to generate schema is
+# the equivalent of giving yourself a lobotomy while in the middle of
+# attempting to write a Pulitzer Prize article. Why handicap yourself? Use
+# SQLAlchemy for what it excels at: generating efficient SQL based on
+# mappings between Python classes and database tables. Manually generated
+# schema results in a few extra lines of code in a tiny number of files, but
+# it goes a long ways towards clarity, predictability and
+# explicitness. Automatic schema migrations, you say? l2dba or gtfo.
+#
+# Re: PostgreSQL vs other RDBMS'es. Here's another piece of hard earned
+# knowledge from my last 14yrs of dorking with countless websites and
+# databases: portability to other relational databases is a straw man
+# argument. PostgreSQL is faster, more stable, the most standards conformant
+# relational database, is ridiculously feature rich and cheaper to operate
+# than its alternatives (both in terms of operations and efficiency on
+# hardware), and that's the short list of reasons. If you are building a
+# website, I am unable to produce a single fact based, data driven argument
+# to use MySQL[1]. Hiring? Training?  Replication? Feh, that's FUD. Please
+# stop perpetrating harm on your own organization and applications by
+# succumbing to unfounded beliefs and lemmingism.
+#
+# [1] There are three situations where I would use a different relational
+# database. The first two situations are: 1) if my target hosting platform
+# did not support SystemV shared memory, or 2) I am architecting something
+# for an embedded or mobile device. In the former case, I'd change hosting
+# providers or would fire my system administrator, and in the latter, I'd use
+# SQLite. What's the third case? The answer is DB2, but what's the question?

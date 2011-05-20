@@ -1,0 +1,17 @@
+{% extends "layout/base.html" %}
+{% block title %}mod3/pages.html{% endblock %}
+{% block content %}
+<h1>mod3: Pages</h1>
+
+<p>A list of all Pages in the database:</p>
+
+<table border="1">
+  <tr><th>ID</th><th>Page Name</th></tr>
+{% for page in pages %}
+  <tr><td>{{ page.id }}</td><td><a href="{{ url_for('page_tags', page_id=page.id) }}">{{ page.url }}</a></td></tr>
+{% else %}
+  <tr><td colspan="2">No entries in <code>public.page</code>. Sad panda.</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}

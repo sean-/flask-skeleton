@@ -1,0 +1,17 @@
+{% extends "layout/base.html" %}
+{% block title %}mod1/list_all.html{% endblock %}
+{% block content %}
+<h1>mod3: tags</h1>
+
+<p>A list of all tags in the database:</p>
+
+<table border="1">
+  <tr><th>ID</th><th>Tag Name</th></tr>
+{% for tag in tags %}
+  <tr><td>{{ tag.id }}</td><td>{{ tag.name }}</td></tr>
+{% else %}
+  <tr><td colspan="2">No entries in <code>public.tag</code>. Sad panda.</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}

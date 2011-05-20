@@ -1,0 +1,17 @@
+{% extends "layout/base.html" %}
+{% block title %}mod3/tag pages{% endblock %}
+{% block content %}
+<h1>mod3: Pages Tagged with Tag {{ tag.id }}</h1>
+
+<p>A list of all Pages tagged by Tag <blink><code>{{tag.name}}</code></blink><!-- You read that right, a <blink/> tag. -->:</p>
+
+<table border="1">
+  <tr><th>Page ID</th><th>Page URL</th></tr>
+{% for page in tag.pages %}
+  <tr><td>{{ page.id }}</td><td><a href="{{ url_for('page_tags', page_id=page.id) }}">{{ page.url }}</a></td></tr>
+{% else %}
+  <tr><td colspan="2">No pages have been tagged!</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}
