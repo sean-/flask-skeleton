@@ -7,14 +7,15 @@ import sys
 __all__ = ['create_app','db']
 
 # A list of app modules and their prefixes. Each APP entry must contain a
-# 'name', the remaining arguments are optional.
+# 'name', the remaining arguments are optional. An optional 'models': False
+# argument can be given to disable loading models for a given module.
 MODULES = [
-#   {'name': 'foo',  'url_prefix': '/admin', 'models': True },
-    {'name': 'aaa',  'url_prefix': '/',      'models': True },
-    {'name': 'home', 'url_prefix': '/',      'models': True },
-    {'name': 'mod1', 'url_prefix': '/',      'models': True },
-    {'name': 'mod2', 'url_prefix': '/mod2'                  },
-    {'name': 'mod3', 'url_prefix': '/mod3',  'models': True },
+#   {'name': 'foo',  'url_prefix': '/admin' },
+    {'name': 'aaa',  'url_prefix': '/'      },
+    {'name': 'home', 'url_prefix': '/'      },
+    {'name': 'mod1', 'url_prefix': '/'      },
+    {'name': 'mod2', 'url_prefix': '/mod2'  },
+    {'name': 'mod3', 'url_prefix': '/mod3'  },
 ]
 
 # Create the Skeleton app
@@ -45,6 +46,10 @@ def create_app(name = __name__):
             url_prefix = None
         load_module_models(app, m)
         app.register_module(views.module, url_prefix=url_prefix)
+
+    # Always set the right remote IP address. I promise you, 127.0.0.1 isn't
+    # correct.
+    app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
     return app
 
 # models are added to the db's metadata when create_app() is actually called.
@@ -52,14 +57,43 @@ db = SQLAlchemy()
 
 # Load a module's models
 def load_module_models(app, module):
-    if not module.has_key('models') or module['models'] == False:
+    if module.has_key('models') and module['models'] == False:
         return
 
     model_name = module['name']
     if app.config['DEBUG']:
         print '[MODEL] Loading db model %s' % (model_name)
     model_name = '%s.models' % (model_name)
-    mod = __import__(model_name)
+    try:
+        mod = __import__(model_name)
+    except ImportError as e:
+        import re
+        if re.match(r'No module named ', e.message) == None:
+            print '[MODEL] Unable to load the model for %s: %s' % (model_name, e.message)
+        return False
+    return True
+
+
+# We're proxied 99.9% of the time behind a load balancer or proxying
+# webserver. Pull the right IP address from the correct HTTP header. In my
+# hosting environments, I inject X-Real-IP as the HTTP header of choice
+# instead of X-Forwarded-For, which has special meaning when it's actually
+# used by the remote client's infrastructure. Mixing and matching HTTP
+# headers used by a client's proxy infrastructure and the server's
+# infrastructure is almost always a bad idea.
+class ProxyFixupHelper(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        # Only perform this fixup if the current remote host is
+        # localhost.
+        if environ['REMOTE_ADDR'] == '127.0.0.1':
+            host = environ.get('HTTP_X_REAL_IP', False)
+            if host:
+                environ['REMOTE_ADDR'] = host
+        return self.app(environ, start_response)
+
 
 # SQL ORM Missive:
 #
