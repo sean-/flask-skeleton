@@ -1,5 +1,4 @@
 from flask import Flask
-from flaskext.csrf import csrf
 from flaskext.sqlalchemy import SQLAlchemy
 
 import os
@@ -11,6 +10,7 @@ __all__ = ['create_app','db']
 # 'name', the remaining arguments are optional.
 MODULES = [
 #   {'name': 'foo',  'url_prefix': '/admin', 'models': True },
+    {'name': 'aaa',  'url_prefix': '/',      'models': True },
     {'name': 'home', 'url_prefix': '/',      'models': True },
     {'name': 'mod1', 'url_prefix': '/',      'models': True },
     {'name': 'mod2', 'url_prefix': '/mod2'                  },
@@ -45,9 +45,6 @@ def create_app(name = __name__):
             url_prefix = None
         load_module_models(app, m)
         app.register_module(views.module, url_prefix=url_prefix)
-
-    # csrf protect the app
-    csrf(app)
     return app
 
 # models are added to the db's metadata when create_app() is actually called.

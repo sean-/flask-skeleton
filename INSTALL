@@ -94,10 +94,15 @@
 
    # Create the admin ROLE and web user
    psql template1 pgsql -c 'CREATE ROLE skeleton_admin CONNECTION LIMIT 10 LOGIN'
+   psql template1 pgsql -c 'CREATE ROLE skeleton_shadow'
    psql template1 pgsql -c 'CREATE ROLE skeleton_www CONNECTION LIMIT 10 LOGIN'
 
    # Create the database. Don't pull a MySQL and use ISO-8895-1
    psql template1 pgsql -c "CREATE DATABASE skeleton OWNER skeleton_admin ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8'"
+
+   # Load the pgcrypto functions in to skeleton
+   cat /opt/local/share/postgresql91/extension/pgcrypto--1.0.sql | sed -e 's#MODULE_PATHNAME#pgcrypto#' > ~/tmp/pgcrypto.sql
+   psql skeleton postgres -1f ~/tmp/pgcrypto.sql
 
    # Load the schema
    psql skeleton skeleton_admin -1 -f sql/schema.sql
@@ -114,9 +119,15 @@
    # Setup the GRANTS
    psql skeleton skeleton_admin -1 -f sql/grants.sql
 
-10) Setup caching:
-
-    # Also yet-to-be-documented
+   # Other misc tips:
+   # 1) Look in to using the contrib'ed auto-explain module: http://www.postgresql.org/docs/current/static/auto-explain.html
+   # 2) A few suggested development tunables for postgresql.conf:
+	# shared_preload_libraries = 'pgcrypto'
+	# synchronous_commit = off
+	# log_connections = on
+	# log_disconnections = on
+	# log_duration = on
+	# log_statement = 'all'
 
 11) Run the app:
 

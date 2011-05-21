@@ -1,3 +1,21 @@
 hr {
 	border: 1px solid #CCCCCC;
 }
+dl {
+	margin-bottom:50px;
+}
+dl dt {
+	background: #5f9be3;
+	color: #ffffff;
+	float: left;
+	clear: left;
+	font-weight: bold;
+	margin-right: 10px;
+	padding: 5px;
+	width: 100px;
+}
+
+dl dd {
+	margin: 2px 0;
+	padding: 5px 0;
+}
