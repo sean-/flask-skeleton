@@ -62,19 +62,15 @@
    # To manually activate the virtualenv, run the following:
    source bin/activate.csh
 
-7) Pull in the required packages. This step is a bit goofy due to using a
-   devel version of SQLAlchemy and PostgreSQL's pg_config being hidden away
-   out of the normal path.
-
-   # Run SQLAlchemy 0.7 or newer
-   pip install --download-cache=~/tmp -I -f http://surfnet.dl.sourceforge.net/project/sqlalchemy/sqlalchemy/0.7b4/SQLAlchemy-0.7b4.tar.gz sqlalchemy==0.7b4
+7) Pull in the required packages. This step is a bit goofy due to PostgreSQL's
+   pg_config being hidden away out of the normal path.
 
    # Install psycopg2 (~/tmp is created automatically via .cshrc)
    env PATH=/opt/local/lib/postgresql91/bin/:${PATH} pip install --download-cache=~/tmp -I psycopg2
 
-   # Even thought requirements.txt ships with SQLAlchemy and psycopg2, remove
-   # them from the list of requirements for now.
-   cat requirements.txt | egrep -vi '^(SQLAlchemy==|psycopg2==)' > requirements.tmp
+   # Even thought requirements.txt ships with psycopg2 listed, remove it from
+   # the list of requirements to make the installation quick and easy.
+   cat requirements.txt | egrep -vi '^(psycopg2==)' > requirements.tmp
    pip install --download-cache=~/tmp -I -r requirements.tmp --no-install
    pip install --download-cache=~/tmp -I -r requirements.tmp --no-download
    pip freeze | sort > requirements.txt
