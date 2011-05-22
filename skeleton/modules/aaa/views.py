@@ -1,4 +1,7 @@
 from flask import flash, redirect, render_template, request, session, url_for
+from sqlalchemy.sql.expression import bindparam, text
+
+from skeleton import db
 from aaa.forms import LoginForm, RegisterForm
 from aaa import module
 
@@ -23,8 +26,24 @@ def logout():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-#        user = User(form.email.data, form.password.data)
-#        db_session.add(user)
-        flash('Thanks for registering, %s' % (form.email.data))
-        return redirect(url_for('aaa.login'))
+        remote_addr = request.environ['REMOTE_ADDR']
+        # Form validates, execute the registration pl function
+        ses = db.session
+        result = ses.execute(
+            text("SELECT ret, col, msg FROM aaa.register(:email, :pw, :ip) AS (ret BOOL, col TEXT, msg TEXT)", bindparams=[
+                    bindparam('email', form.email.data),
+                    bindparam('pw', form.password.data),
+                    bindparam('ip', remote_addr)]))
+        row = result.first()
+        if row[0] == True:
+            ses.commit()
+            flash('Thanks for registering, %s' % (form.email.data))
+            return redirect(url_for('aaa.login'))
+        else:
+            # Return a useful error message from the database
+            try:
+                field = form.__getattribute__(row[1])
+                field.errors.append(row[2])
+            except AttributeError as e:
+                pass
     return render_template('aaa/register.html', form=form)

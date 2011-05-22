@@ -29,6 +29,20 @@ REVOKE ALL ON ALL FUNCTIONS IN SCHEMA mod1 FROM skeleton_www;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA mod1 TO skeleton_www;
 -- END: Permissions for the 'mod1' SCHEMA
 
+-- BEGIN: Permissions for the 'aaa' SCHEMA
+REVOKE ALL ON SCHEMA aaa FROM skeleton_www;
+GRANT USAGE ON SCHEMA aaa TO skeleton_www;
+
+REVOKE ALL ON ALL TABLES IN SCHEMA aaa FROM skeleton_www;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA aaa TO skeleton_www;
+
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA aaa FROM skeleton_www;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA aaa TO skeleton_www;
+
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA aaa FROM skeleton_www;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA aaa TO skeleton_www;
+-- END: Permissions for the 'aaa' SCHEMA
+
 
 -- Pro tip: put different database objects in different schemas so that you can
 -- assign different privileges to different schemas in a blanket way. For

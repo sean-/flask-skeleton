@@ -132,8 +132,9 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 
 -- Create a function to register a new user SECURITY DEFINER set to log a
 -- user in. Example: SELECT aaa.register(email := 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44');
-CREATE FUNCTION aaa.register(email TEXT, password TEXT, ip_address INET) RETURNS BOOL AS $$
+CREATE FUNCTION aaa.register(email TEXT, password TEXT, ip_address INET) RETURNS RECORD AS $$
 DECLARE
+	ret RECORD;
 	a_email      ALIAS FOR email;
 	a_password   ALIAS FOR password;
 	a_ip_address ALIAS FOR ip_address;
@@ -145,8 +146,8 @@ BEGIN
 	SELECT e.id INTO v_email_id FROM shadow.aaa_email AS e WHERE e.email = a_email LIMIT 1;
 	IF found THEN
 		-- Should log that this IP address attempted a failed registration
-		RAISE NOTICE 'email address already in use';
-		RETURN FALSE;
+		ret := (FALSE, 'email'::TEXT, 'email address already in use'::TEXT);
+		RETURN ret;
 	END IF;
 
 	-- Hash the user's password.
@@ -158,7 +159,8 @@ BEGIN
 	INSERT INTO shadow.aaa_email (email, user_id) VALUES (a_email, 0) RETURNING id INTO STRICT v_email_id;
 	INSERT INTO shadow.aaa_user (hashpass, primary_email_id, registration_utc, registration_ip) VALUES (v_hashed_password, v_email_id, NOW(), a_ip_address) RETURNING id INTO STRICT v_user_id;
 	UPDATE shadow.aaa_email SET user_id = v_user_id WHERE id = v_email_id;
-	RETURN TRUE;
+	ret := (TRUE, NULL::TEXT, NULL::TEXT);
+	RETURN ret;
 END;
 $$
 	LANGUAGE plpgsql
