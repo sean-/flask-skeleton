@@ -10,7 +10,7 @@ Tempita==0.5dev
 WTForms==0.6.3
 Werkzeug==0.6.2
 decorator==3.3.1
-psycopg2==2.4
+psycopg2==2.4.1
 simplejson==2.1.6
 twill==0.9
 wsgiref==0.1.2
