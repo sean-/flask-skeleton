@@ -314,6 +314,13 @@ endsw
 unset noglob
 # End the auto-complete section
 
+# Use a "site-wide" .tcsh.site file for per-company settings and a per-host
+# .tcsh.local for per-host settings. .cshrc is largely immutable because I
+# update it periodically via:
+#
+# fetch -o ~/.cshrc https://github.com/sean-/flask-skeleton/raw/master/.cshrc
+if (-o .tcsh.site && -P22 .tcsh.site == "0") source .tcsh.site
+if (-o .tcsh.local && -P22 .tcsh.local == "0") source .tcsh.local
 
 end:
     onintr
