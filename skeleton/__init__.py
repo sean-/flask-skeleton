@@ -1,4 +1,5 @@
 from flask import Flask
+from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
 
 import os
@@ -50,6 +51,17 @@ def create_app(name = __name__):
     # Always set the right remote IP address. I promise you, 127.0.0.1 isn't
     # correct.
     app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
+
+    # Enable the DebugToolbar
+    if app.config['DEBUG_TOOLBAR']:
+        toolbar = DebugToolbarExtension(app)
+        app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+        app.config['DEBUG_TB_PANELS'] = (
+            'flaskext.debugtoolbar.panels.headers.HeaderDebugPanel',
+            'flaskext.debugtoolbar.panels.logger.LoggingPanel',
+            'flaskext.debugtoolbar.panels.timer.TimerDebugPanel',
+            )
+
     return app
 
 # models are added to the db's metadata when create_app() is actually called.

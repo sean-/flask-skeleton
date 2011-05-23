@@ -11,6 +11,7 @@ DB_SCHEMA = 'skeleton_schema'
 DB_ADMIN = 'skeleton_admin'
 DB_USER = 'skeleton_www'
 DEBUG = False
+DEBUG_TOOLBAR = False
 PASSWORD_HASH = ''
 SECRET_KEY = ''
 SESSION_COOKIE_NAME = 'skeleton_session'

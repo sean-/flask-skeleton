@@ -5,4 +5,4 @@ class User(db.Model):
         'user', db.metadata,
         db.Column('id', db.Integer, primary_key=True),
         db.Column('primary_email_id', db.Integer),
-        schema='aaa')
+        schema='email')

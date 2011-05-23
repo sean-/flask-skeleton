@@ -7,4 +7,4 @@ class UserEmails(db.Model):
         db.Column('email_id', db.Integer),
         db.Column('email', db.String),
         db.Column('user_primary_email_id', db.Integer),
-        schema='aaa')
+        schema='email')

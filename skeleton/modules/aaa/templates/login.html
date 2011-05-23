@@ -11,6 +11,7 @@
   <dl>
     {{ render_field(form.email) }}
     {{ render_field(form.password) }}
+    {{ render_field(form.idle_ttl) }}
     <dd>{{ form.submit }}</dd>
   </dl>
   {{ form.hidden_tag() }}
