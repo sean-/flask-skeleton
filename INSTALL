@@ -150,21 +150,27 @@
     # have you add various bits to local_settings.py. It is critically
     # important that:
     #
-    # a) all webservers have the same PASSWORD_HASH. If you loose
-    #    PASSWORD_HASH, users will not be able to log in. The contents of
-    #    PASSWORD_HASH should never exist on your database servers.
+    # a) PASSWORD_HASH: All webservers have the same PASSWORD_HASH. If you
+    #    loose PASSWORD_HASH, users will not be able to log in. The contents
+    #    of PASSWORD_HASH should never exist on your database servers.
     #
-    # b) The contents of sql/db_password.hash should never be present on your
-    #    webservers. Like PASSWORD_HASH, if you loose the contents of
-    #    db_password.hash, users will not be able to log in without resetting
-    #    their password (on the plus side, at least db_password.hash is
-    #    stored in the contents of the pl functions - which are visible to
-    #    any logged in user, regardless of the permissions set on the
-    #    function's enclosing schema and the function itself).
+    # b) sql/db_password.hash: The contents of sql/db_password.hash should
+    #    never be present on your webservers. Like PASSWORD_HASH, if you
+    #    loose the contents of db_password.hash, users will not be able to
+    #    log in without resetting their password (on the plus side, at least
+    #    db_password.hash is stored in the contents of the pl functions -
+    #    which are visible to any logged in user, regardless of the
+    #    permissions set on the function's enclosing schema and the function
+    #    itself).
     #
-    # c) SECRET_KEY must be syncronized across all webservers, too, but
-    #    unlike PASSWORD_HASH, you can regenerate it at any time and there's
-    #    no real loss (users will have to re-login).
+    # c) SECRET_KEY: SECRET_KEY must be syncronized across all webservers,
+    #    too, but unlike PASSWORD_HASH, you can regenerate it at any time and
+    #    there's no real loss (users will have to re-login).
+    #
+    # d) BROWSER_SECRET_KEY: Similar story to SECRET_KEY. All web servers
+    #    must have the same BROWSER_SECRET_KEY. If you loose this key, every
+    #    BrowserID cookie will be reset. Not the end of the world, but
+    #    tedious as hell to recover from.
 
 
 9) Remove the remnants of git:
