@@ -25,7 +25,7 @@ USE_SSL = True
 SQLALCHEMY_ECHO = False
 
 # If users want to pass specific werkzeug options
-WERKZEUG_OPTS = {}
+WERKZEUG_OPTS = {'port' : 5000}
 
 # Import user-provided values
 try:
@@ -109,7 +109,7 @@ if USE_SSL:
 
     ### WARNING: Ugh. Monkey pach in a fix to correct pyOpenSSL's
     ### incompatible ServerSocket implementation that accepts zero arguments
-    ### for shutdown() instead of one. Monkey patch
+    ### for shutdown() instead of one. Fix up
     ### lib/python2.7/SocketServer.py:459's shutdown() call because that
     ### appears to be easier to quickly hack in versus patching
     ### pyOpenSSL. Again, don't use this for production, but it's great for
