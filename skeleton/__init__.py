@@ -1,9 +1,10 @@
+import os
+import sys
+
 from flask import Flask
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
-
-import os
-import sys
+from repoze.browserid.middleware import BrowserIdMiddleware
 
 __all__ = ['create_app','db']
 
@@ -29,6 +30,7 @@ def create_app(name = __name__):
     # Init the database engine
     db.init_app(app)
 
+    # Load the various modules
     cur = os.path.abspath(__file__)
     sys.path.append(os.path.dirname(cur) + '/modules')
     for m in MODULES:
@@ -61,6 +63,14 @@ def create_app(name = __name__):
             'flaskext.debugtoolbar.panels.logger.LoggingPanel',
             'flaskext.debugtoolbar.panels.timer.TimerDebugPanel',
             )
+
+    # Always attempt to set a BrowserId. At some point this will get used,
+    # but let's start setting it now.
+    app.wsgi_app = BrowserIdMiddleware(
+        app.wsgi_app, secret_key=app.config['BROWSER_SECRET_KEY'],
+        cookie_name='bi', cookie_path='/',
+        cookie_domain=None, cookie_lifetime=86400 * 365 * 10,
+        cookie_secure=None, vary=())
 
     return app
 

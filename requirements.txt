@@ -5,12 +5,15 @@ Flask-WTF==0.5.2
 Flask==0.6.1
 Jinja2==2.5.5
 MarkupSafe==0.12
+Paste==1.7.5.1
 SQLAlchemy==0.7.0
 Tempita==0.5dev
 WTForms==0.6.3
 Werkzeug==0.6.2
 decorator==3.3.1
 psycopg2==2.4.1
+pyOpenSSL==0.12
+repoze.browserid==0.3
 simplejson==2.1.6
 twill==0.9
 wsgiref==0.1.2
