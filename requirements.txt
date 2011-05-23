@@ -1,5 +1,6 @@
 Flask-DebugToolbar==0.5
 Flask-SQLAlchemy==0.11
+Flask-Script==0.3.1
 Flask-Testing==0.3
 Flask-WTF==0.5.2
 Flask==0.6.1
@@ -11,6 +12,8 @@ SQLAlchemy==0.7.0
 Tempita==0.5dev
 WTForms==0.6.3
 Werkzeug==0.6.2
+argparse==1.2.1
+blinker==1.1
 decorator==3.3.1
 psycopg2==2.4.1
 pyOpenSSL==0.12

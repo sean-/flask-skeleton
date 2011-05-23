@@ -23,14 +23,53 @@ MODULES = [
 # Create the Skeleton app
 def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')
+    load_config(app)
+    db.init_app(app)
+    register_local_modules(app)
+
+    app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
+
+    # Enable the DebugToolbar
+    if app.config['DEBUG_TOOLBAR']:
+        toolbar = DebugToolbarExtension(app)
+
+    # Always attempt to set a BrowserId. At some point this will get used,
+    # but let's start setting it now.
+    app.wsgi_app = BrowserIdMiddleware(
+        app.wsgi_app, secret_key=app.config['BROWSER_SECRET_KEY'],
+        cookie_name='b', cookie_path='/',
+        cookie_domain=None, cookie_lifetime=86400 * 365 * 10,
+        cookie_secure=None, vary=())
+
+    return app
+
+
+def load_config(app):
     app.config.from_object(__name__)
     app.config.from_object('default_settings')
     app.config.from_envvar('SKELETON_SETTINGS', silent=True)
 
-    # Init the database engine
-    db.init_app(app)
 
-    # Load the various modules
+# Load the local modules
+def load_module_models(app, module):
+    if module.has_key('models') and module['models'] == False:
+        return
+
+    model_name = module['name']
+    if app.config['DEBUG']:
+        print '[MODEL] Loading db model %s' % (model_name)
+    model_name = '%s.models' % (model_name)
+    try:
+        mod = __import__(model_name)
+    except ImportError as e:
+        import re
+        if re.match(r'No module named ', e.message) == None:
+            print '[MODEL] Unable to load the model for %s: %s' % (model_name, e.message)
+        return False
+    return True
+
+
+def register_local_modules(app):
     cur = os.path.abspath(__file__)
     sys.path.append(os.path.dirname(cur) + '/modules')
     for m in MODULES:
@@ -50,66 +89,19 @@ def create_app(name = __name__):
         load_module_models(app, m)
         app.register_module(views.module, url_prefix=url_prefix)
 
-    # Always set the right remote IP address. I promise you, 127.0.0.1 isn't
-    # correct.
-    app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
 
-    # Enable the DebugToolbar
-    if app.config['DEBUG_TOOLBAR']:
-        toolbar = DebugToolbarExtension(app)
-        app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
-        app.config['DEBUG_TB_PANELS'] = (
-            'flaskext.debugtoolbar.panels.headers.HeaderDebugPanel',
-            'flaskext.debugtoolbar.panels.logger.LoggingPanel',
-            'flaskext.debugtoolbar.panels.timer.TimerDebugPanel',
-            )
-
-    # Always attempt to set a BrowserId. At some point this will get used,
-    # but let's start setting it now.
-    app.wsgi_app = BrowserIdMiddleware(
-        app.wsgi_app, secret_key=app.config['BROWSER_SECRET_KEY'],
-        cookie_name='bi', cookie_path='/',
-        cookie_domain=None, cookie_lifetime=86400 * 365 * 10,
-        cookie_secure=None, vary=())
-
-    return app
-
-# models are added to the db's metadata when create_app() is actually called.
-db = SQLAlchemy()
-
-# Load a module's models
-def load_module_models(app, module):
-    if module.has_key('models') and module['models'] == False:
-        return
-
-    model_name = module['name']
-    if app.config['DEBUG']:
-        print '[MODEL] Loading db model %s' % (model_name)
-    model_name = '%s.models' % (model_name)
-    try:
-        mod = __import__(model_name)
-    except ImportError as e:
-        import re
-        if re.match(r'No module named ', e.message) == None:
-            print '[MODEL] Unable to load the model for %s: %s' % (model_name, e.message)
-        return False
-    return True
-
-
-# We're proxied 99.9% of the time behind a load balancer or proxying
-# webserver. Pull the right IP address from the correct HTTP header. In my
-# hosting environments, I inject X-Real-IP as the HTTP header of choice
-# instead of X-Forwarded-For, which has special meaning when it's actually
-# used by the remote client's infrastructure. Mixing and matching HTTP
-# headers used by a client's proxy infrastructure and the server's
-# infrastructure is almost always a bad idea.
+# Seeing 127.0.0.1 is almost never correct, promise.  We're proxied 99.9% of
+# the time behind a load balancer or proxying webserver. Pull the right IP
+# address from the correct HTTP header. In my hosting environments, I inject
+# X-Real-IP as the HTTP header of choice instead of appending to
+# X-Forwarded-For. Mixing and matching HTTP headers used by a client's proxy
+# infrastructure and the server's infrastructure is almost always a bad idea.
 class ProxyFixupHelper(object):
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
-        # Only perform this fixup if the current remote host is
-        # localhost.
+        # Only perform this fixup if the current remote host is localhost.
         if environ['REMOTE_ADDR'] == '127.0.0.1':
             host = environ.get('HTTP_X_REAL_IP', False)
             if host:
@@ -154,3 +146,6 @@ class ProxyFixupHelper(object):
 # for an embedded or mobile device. In the former case, I'd change hosting
 # providers or would fire my system administrator, and in the latter, I'd use
 # SQLite. What's the third case? The answer is DB2, but what's the question?
+
+# Models are added to the db's metadata when create_app() is actually called.
+db = SQLAlchemy()
