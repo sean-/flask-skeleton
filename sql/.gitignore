@@ -1,0 +1,3 @@
+funcs.sql
+# Don't ignore db_password.hash that way people keep it around. If you loose this, you loose the ability to log users in!!!!
+#db_password.hash
