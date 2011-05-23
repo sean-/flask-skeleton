@@ -49,8 +49,8 @@ if len(BROWSER_SECRET_KEY) < 16:
 # is set. Idiots use passwords less than 16char. Just sayin'.
 if len(DB_PASS) < 8:
     # Generate a 29char random password. Good enough.
-    import OpenSSL, os, re
-    randpw = re.sub(os.linesep, '', OpenSSL.rand.bytes(24).encode('base64')[:32])
+    import M2Crypto, os, re
+    randpw = re.sub(os.linesep, '', M2Crypto.m2.rand_bytes(24).encode('base64').rstrip())
     print "Generating a random password for DB_PASS. Copy/paste the following commands to setup a random non-fail password."
     print '\n\techo "DB_PASS = \'%s\'" >> local_settings.py\n' % randpw
     raise ValueError('DB_PASS needs to be set and longer than 8 characters (len(DB_PASS) >= 16 recommended)!')
@@ -60,8 +60,8 @@ if len(DB_PASS) < 8:
 # hash is set of modest strength.
 if len(PASSWORD_HASH) < 32:
     # Generate a decently long random secret.
-    import OpenSSL
-    randsec = re.sub(os.linesep, '', OpenSSL.rand.bytes(256).encode('base64'))
+    import M2Crypto, os, re
+    randsec = re.sub(os.linesep, '', M2Crypto.m2.rand_bytes(256).encode('base64').rstrip())
     print "Generating a random secret for PASSWORD_HASH. Copy/paste the following commands to setup a random non-fail secret.\n"
     print '\techo "PASSWORD_HASH = \'%s\'.decode(\'base64\')" >> local_settings.py\n' % randsec
     print "DO NOT LOOSE PASSWORD_HASH! If you loose PASSWORD_HASH no users will be able to log in and every user will have to reset their password!!!\n"
@@ -72,8 +72,8 @@ if len(PASSWORD_HASH) < 32:
 # is set of modest strength.
 if len(SECRET_KEY) < 32:
     # Generate a decently long random secret.
-    import OpenSSL
-    randsec = re.sub(os.linesep, '', OpenSSL.rand.bytes(256).encode('base64'))
+    import M2Crypto, os, re
+    randsec = re.sub(os.linesep, '', M2Crypto.m2.rand_bytes(256).encode('base64').rstrip())
     print "Generating a random secret for SECRET_KEY. Copy/paste the following commands to setup a random non-fail secret.\n"
     print '\techo "SECRET_KEY = \'%s\'.decode(\'base64\')" >> local_settings.py\n' % randsec
     raise ValueError('SECRET_KEY needs to be set and longer than 32 characters (len(SECRET_KEY) >= 64 recommended)!')
@@ -84,16 +84,22 @@ if len(SECRET_KEY) < 32:
 if USE_SSL:
     import os
     key_file = SSL_PRIVATE_KEY_FILENAME if SSL_PRIVATE_KEY_FILENAME else 'ssl.key'
-    if not os.access(key_file, os.R_OK):
-        print "HINT: To generate a private key:\n"
-        print "\topenssl genrsa 1024 > %s\n" % key_file
+    cert_file = SSL_CERT_FILENAME if SSL_CERT_FILENAME else 'ssl.cert'
+    if not os.access(key_file, os.R_OK) and not os.access(cert_file, os.R_OK):
+        print "HINT: To generate a key and cert without it prompting for information (spaces are escaped with a \\):\n"
+        print "\topenssl req -x509 -nodes -days 365 -subj '/C=US/ST=MyState/L=MyCity/CN=127.0.0.1/O=MyCompany\ Inc/OU=MyOU/emailAddress=user@example.com' -newkey rsa:1024 -keyout %s -out %s\n" % (key_file, cert_file)
         raise ValueError('SSL_PRIVATE_KEY_FILENAME file missing (possibly needs to be generated?)')
 
-    cert_file = SSL_CERT_FILENAME if SSL_CERT_FILENAME else 'ssl.cert'
-    if not os.access(cert_file, os.R_OK):
-        print "HINT: To generate a private key:\n"
-        print "\topenssl req -new -x509 -nodes -sha1 -days 365 -key %s > %s\n" % (key_file, cert_file)
-        raise ValueError('SSL_CERT_FILENAME file missing (possibly needs to be generated?)')
+    else:
+        if not os.access(key_file, os.R_OK):
+            print "HINT: To generate a private key:\n"
+            print "\topenssl genrsa 1024 > %s\n" % key_file
+            raise ValueError('SSL_PRIVATE_KEY_FILENAME file missing (possibly needs to be generated?)')
+
+        if not os.access(cert_file, os.R_OK):
+            print "HINT: To generate a private key:\n"
+            print "\topenssl req -new -x509 -nodes -sha1 -days 365 -key %s > %s\n" % (key_file, cert_file)
+            raise ValueError('SSL_CERT_FILENAME file missing (possibly needs to be generated?)')
 
     from OpenSSL import SSL
     ctx = SSL.Context(SSL.TLSv1_METHOD)
