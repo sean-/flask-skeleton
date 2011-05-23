@@ -171,6 +171,12 @@
     #    must have the same BROWSER_SECRET_KEY. If you loose this key, every
     #    BrowserID cookie will be reset. Not the end of the world, but
     #    tedious as hell to recover from.
+    #
+    # e) SSL_CERT_FILENAME and SSL_PRIVATE_KEY_FILENAME: These are your SSL
+    #    certs. Don't loose them. Don't use Werkzeug for handling SSL in
+    #    production, but it's really convenient to test in an SSL environment
+    #    from the beginning.
+
 
 
 9) Remove the remnants of git:
