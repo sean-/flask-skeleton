@@ -11,16 +11,13 @@ DB_SCHEMA = 'skeleton_schema'
 DB_ADMIN = 'skeleton_admin'
 DB_USER = 'skeleton_www'
 DEBUG = False
+PASSWORD_HASH = ''
+SECRET_KEY = ''
 SESSION_COOKIE_NAME = 'skeleton_session'
 TESTING = False
 
 # Logs SQL queries to stderr
 SQLALCHEMY_ECHO = False
-
-# Generated via:
-# from os import urandom
-# urandom(256)
-SECRET_KEY = ''
 
 # Import user-provided values
 try:
@@ -37,6 +34,19 @@ if len(DB_PASS) < 8:
     print "Generating a random password for DB_PASS. Copy/paste the following commands to setup a random non-fail password."
     print '\n\techo "DB_PASS = \'%s\'" >> local_settings.py\n' % randpw
     raise ValueError('DB_PASS needs to be set and longer than 8 characters (len(DB_PASS) >= 16 recommended)!')
+
+# Add a small amount of anti-footshooting and check to make sure a password
+# hash is set of modest strength.
+if len(PASSWORD_HASH) < 32:
+    # Generate a decently long random secret.
+    from os import urandom
+    import binascii
+    randsec = binascii.b2a_hex(urandom(256))
+    print "Generating a random secret for PASSWORD_HASH. Copy/paste the following commands to setup a random non-fail secret.\n"
+    print '\techo "import binascii" >> local_settings.py'
+    print '\techo "PASSWORD_HASH = binascii.a2b_hex(\'%s\')" >> local_settings.py\n' % randsec
+    print "DO NOT LOOSE PASSWORD_HASH! If you loose PASSWORD_HASH no users will be able to log in and every user will have to reset their password!!!\n"
+    raise ValueError('PASSWORD_HASH needs to be set and longer than 32 characters (len(PASSWORD_HASH) >= 32 recommended)!')
 
 # Add a small amount of anti-footshooting and check to make sure a secret key
 # is set of modest strength.
