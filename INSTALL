@@ -3,16 +3,17 @@
    git clone git@github.com:sean-/flask-skeleton.git
 
 
-0a)
+0a) I use tcsh(1) for day-to-day use and then sh(1) for scripting. Most
+    bash(1) enthusiasts don't have enough perspective to have an opinion
+    worth listening to. New tcsh users, enjoy the up-arrow history,
+    tab-completion for ssh hosts, `time long_command`, etc., ...
 
-   # I use tcsh(1) for day-to-day use and then sh(1) for scripting. Most
-   # bash(1) enthusiasts don't have enough perspective to have an opinion
-   # worth listening to. New tcsh users, enjoy the up-arrow history,
-   # tab-completion for ssh hosts, `time long_command`, etc., ...
-   less .cshrc     # _Always_ review changes to your shell config
-   mv .cshrc ~/    # Install the configured tcsh(1) hotness
-   exec /bin/tcsh  # Start using tcsh(1)
-   chsh /bin/tcsh  # Change your default shell once you feel comfortable
+    See https://github.com/sean-/cshrc for details, or just:
+
+    $ curl -o ~/.cshrc https://github.com/sean-/cshrc/raw/master/.cshrc
+    $ less ~/.cshrc     # _Always_ review changes to your shell config
+    $ exec /bin/tcsh    # Start using tcsh(1)
+    % chsh /bin/tcsh    # Change your default shell once you feel comfortable
 
 
 1) Rename from 'skeleton' to 'myapp':
