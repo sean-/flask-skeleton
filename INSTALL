@@ -85,9 +85,11 @@
    # Create the database. Don't pull a MySQL and use ISO-8895-1
    psql template1 pgsql -c "CREATE DATABASE skeleton OWNER skeleton_admin ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8'"
 
-   # Load the pgcrypto functions in to skeleton
+   # Load the pgcrypto and uuid functions in to skeleton
    cat /opt/local/share/postgresql91/extension/pgcrypto--1.0.sql | sed -e 's#MODULE_PATHNAME#pgcrypto#' > ~/tmp/pgcrypto.sql
+   cat /opt/local/share/postgresql91/extension/uuid-ossp--1.0.sql | sed -e 's#MODULE_PATHNAME#uuid-ossp#' > ~/tmp/uuid-ossp.sql
    psql skeleton pgsql -1f ~/tmp/pgcrypto.sql
+   psql skeleton pgsql -1f ~/tmp/uuid-ossp.sql
 
    # Load the schema
    psql skeleton skeleton_admin -1 -f sql/schema.sql
@@ -126,7 +128,7 @@
    #    http://www.postgresql.org/docs/current/static/auto-explain.html
    #
    # 2) A few suggested development tunables for postgresql.conf:
-	# shared_preload_libraries = 'pgcrypto'
+	# shared_preload_libraries = 'pgcrypto,uuid-ossp'
 	# synchronous_commit = off
 	# log_connections = on
 	# log_disconnections = on
