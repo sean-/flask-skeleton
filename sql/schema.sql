@@ -167,6 +167,6 @@ CREATE VIEW email."user" (id, primary_email_id) AS
 -- address in the system.
 CREATE VIEW email.user_emails (user_id, email_id, email, user_primary_email_id) AS
 	SELECT u.id, e.id, e.email, u.primary_email_id
-	FROM aaa.email AS e, aaa."user" AS u
+	FROM email.email AS e, email."user" AS u
 	WHERE e.user_id = u.id;
 -- END: aaa's schema
