@@ -76,7 +76,7 @@ BEGIN
 	-- bad.  sha256(sha256('mypass'), webserver_key) == infinitely better
 	v_pw_from_user := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
 
-	SELECT u.hashpass, u.active INTO STRICT v_pw_from_db, v_user_active
+	SELECT u.hashpass, u.active INTO v_pw_from_db, v_user_active
 		FROM shadow.aaa_user AS u WHERE u.id = v_user_id;
 	IF NOT FOUND THEN
 		-- This check is required, despite having FOREIGN KEYS in
