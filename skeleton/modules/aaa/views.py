@@ -32,6 +32,17 @@ def login():
         h.update(form.password.data)
         shapass = h.digest()
 
+        # Change out the values of the session ttl
+        idle = '1 second'
+        if form.idle_ttl.data == 'tmp':
+            idle = '20 minutes'
+        elif form.idle_ttl.data == 'day':
+            idle = '1 day'
+        elif form.idle_ttl.data == 'week':
+            idle = '1 week'
+        else:
+            flask.abort(500)
+
         ses = db.session
         result = ses.execute(
             # SELECT result, "column", message FROM aaa.login(email := 'user@example.com', password := '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co', ip_address := '11.22.33.44', session_id := 'user session id from flask', renewal_interval := '60 minutes'::INTERVAL) AS (result BOOL, "column" TEXT, message TEXT);
@@ -40,8 +51,8 @@ def login():
                     bindparam('email', form.email.data),
                     bindparam('pw', shapass, type_=LargeBinary),
                     bindparam('ip', remote_addr),
-                    bindparam('sid', session.sid),
-                    bindparam('idle',form.idle_ttl.data)]))
+                    bindparam('sid', session['i']),
+                    bindparam('idle',idle)]))
         row = result.first()
         if row[0] == True:
             ses.commit()
@@ -50,12 +61,17 @@ def login():
         else:
             # Return a useful error message from the database
             try:
+                # Perform some super nice handholding
                 field = form.__getattribute__(row[1])
-                field.errors.append(row[2])
+                if field.name == 'email':
+                    # If brute force weren't such an issue, we'd just append
+                    # a field error like below.
+                    form.errors['Bogus'] = 'Populating form.errors with garbage'
+                    pass
+                else:
+                    field.errors.append(row[2])
             except AttributeError as e:
                 pass
-
-        return redirect(url_for('home.index'))
     return render_template('aaa/login.html', form=form)
 
 
