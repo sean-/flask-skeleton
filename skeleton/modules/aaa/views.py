@@ -93,7 +93,7 @@ def register():
         row = result.first()
         if row[0] == True:
             ses.commit()
-            flash('Thanks for registering, %s' % (form.email.data))
+            flash('Thanks for registering! Please check your %s email account to confirm your email address.' % (form.email.data))
             return redirect(url_for('aaa.login'))
         else:
             # Return a useful error message from the database
