@@ -62,9 +62,11 @@ def login():
         ses.commit()
         row = result.first()
         if row[0] == True:
+            session['li'] = True
             flash('Successfully logged in as %s' % (form.email.data))
             return redirect(url_for('home.index'))
         else:
+            session.pop('li', None)
             # Return a useful error message from the database
             try:
                 # If the database says be vague, we'll be vague in our error
