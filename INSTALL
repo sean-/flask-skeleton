@@ -136,6 +136,7 @@
 	# log_disconnections = on
 	# log_duration = on
 	# log_statement = 'all'
+	# timezone = 'UTC'
    #
    # 3) Learn how to use dblink (and get creative with its use in functions
    #    and views):
@@ -145,6 +146,10 @@
    #    recommend using PostgreSQL on 127.0.0.1:6432 and then pgbouncer on
    #    *:5432. Be sure to check out the 'pgbouncer' database and run the
    #    'SHOW STATS' commands.
+   #
+   # 5) Small reading comprehension test: until you set the database or the
+   #    connection's timezone to UTC, timezone to UTC, you will get
+   #    '*check1'-like errors.
 
 
 8) Run the app:

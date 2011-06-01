@@ -67,7 +67,11 @@ CREATE TABLE shadow.aaa_email_confirmation_log (
 	confirmed BOOL NOT NULL DEFAULT FALSE,
 	ip_address INET,
 	timestamp_confirmed TIMESTAMP WITH TIME ZONE,
-	CHECK (confirmed = FALSE OR (confirmed = TRUE AND ip_address IS NOT NULL AND timestamp_confirmed IS NOT NULL)),
+	CHECK(confirmed = FALSE OR (confirmed = TRUE AND ip_address IS NOT NULL AND timestamp_confirmed IS NOT NULL)),
+	CHECK(EXTRACT(TIMEZONE FROM timestamp_sent) = 0.0),
+	-- If timestamp_confirmed IS NULL, the CHECK should pass, otherwise
+	-- make sure that we stored the data in UTC.
+	CHECK(timestamp_confirmed IS NULL OR EXTRACT(TIMEZONE FROM timestamp_confirmed) = 0.0),
 	PRIMARY KEY(id),
 	FOREIGN KEY(email_id) REFERENCES shadow.aaa_email(id)
 );
@@ -84,7 +88,8 @@ CREATE TABLE shadow.aaa_user (
 	max_concurrent_sessions INT NOT NULL DEFAULT 1,
 	PRIMARY KEY(id),
 	FOREIGN KEY(primary_email_id) REFERENCES shadow.aaa_email(id),
-	CHECK (max_concurrent_sessions >= 0)
+	CHECK(max_concurrent_sessions >= 0),
+	CHECK(EXTRACT(TIMEZONE FROM registration_utc) = 0.0)
 );
 CREATE UNIQUE INDEX aaa_user_primary_email_udx ON shadow.aaa_user(primary_email_id);
 ALTER TABLE shadow.aaa_email ADD CONSTRAINT email_user_fk FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id) INITIALLY DEFERRED;
@@ -99,7 +104,9 @@ CREATE TABLE shadow.aaa_login_attempts (
 	notes TEXT,
 	PRIMARY KEY(id),
 	FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
-	CHECK(success OR (NOT success AND notes IS NOT NULL))
+	CHECK(success OR (NOT success AND notes IS NOT NULL)),
+	CHECK(EXTRACT(TIMEZONE FROM login_utc) = 0.0),
+	CHECK(logout_utc IS NULL OR EXTRACT(TIMEZONE FROM logout_utc) = 0.0)
 );
 CREATE INDEX aaa_login_attempts_user_login_idx ON shadow.aaa_login_attempts(user_id, login_utc);
 
@@ -130,7 +137,8 @@ CREATE TABLE shadow.aaa_session (
 	FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
 	CHECK(start_utc < end_utc AND
 		end_utc > NOW() AND
-		renewal_interval > '0'::INTERVAL)
+		renewal_interval > '0'::INTERVAL),
+	CHECK(EXTRACT(TIMEZONE FROM start_utc) = 0.0 AND EXTRACT(TIMEZONE FROM end_utc) = 0.0)
 );
 -- Indexed for obvious reasons
 CREATE UNIQUE INDEX aaa_session_id_valid_udx ON shadow.aaa_session(session_id) WHERE valid = TRUE;
