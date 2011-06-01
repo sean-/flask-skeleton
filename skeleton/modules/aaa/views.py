@@ -91,6 +91,7 @@ def login():
 
 @module.route('/logout')
 def logout():
+    # Nuke every key in the session
     for k in session.keys():
         session.pop(k)
     flash('You were logged out')
