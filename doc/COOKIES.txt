@@ -1,0 +1,8 @@
+An explanation of every cookie:
+
+b
+	Randomly generated Browser ID
+
+skeleton_session
+	i  = Session ID
+	li = Logged In
