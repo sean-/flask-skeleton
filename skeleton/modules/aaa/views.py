@@ -1,4 +1,5 @@
-import hashlib
+# -*- coding: utf-8 -*-
+import base64, hashlib, M2Crypto
 
 from flask import current_app, flash, redirect, render_template, request, session, url_for
 from sqlalchemy.sql.expression import bindparam, text
@@ -8,9 +9,20 @@ from skeleton import db
 from aaa.forms import LoginForm, RegisterForm
 from aaa import module
 
+def gen_session_id():
+    """ Generates a session ID """
+    # Be kind to future support people and developers by using a base32
+    # encoded session id. Why is this cool? Read RFC3548 §5 and rejoice
+    # at the lack of ambiguity regarding "one", "ell", "zero" and
+    # "ohh". You can thank me later.
+    return base64.b32encode(M2Crypto.m2.rand_bytes(current_app.config['SESSION_BYTES']))
+
 @module.route('/login', methods=('GET','POST'))
 def login():
     form = LoginForm()
+    if not session.has_key('i'):
+        session['i'] = gen_session_id()
+
     if form.validate_on_submit():
         remote_addr = request.environ['REMOTE_ADDR']
 
@@ -57,6 +69,9 @@ def logout():
 @module.route('/register', methods=('GET','POST'))
 def register():
     form = RegisterForm()
+    if not session.has_key('i'):
+        session['i'] = gen_session_id()
+
     if form.validate_on_submit():
         # Form validates, execute the registration pl function
 
