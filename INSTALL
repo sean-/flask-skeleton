@@ -173,7 +173,7 @@
     #    permissions set on the function's enclosing schema and the function
     #    itself).
     #
-    # c) SECRET_KEY: SECRET_KEY must be syncronized across all webservers,
+    # c) SECRET_KEY: SECRET_KEY must be synchronized across all webservers,
     #    too, but unlike PASSWORD_HASH, you can regenerate it at any time and
     #    there's no real loss (users will have to re-login).
     #
