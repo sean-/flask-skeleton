@@ -59,17 +59,20 @@ CREATE TABLE shadow.aaa_email (
 CREATE UNIQUE INDEX email_email_lower_udx ON shadow.aaa_email(LOWER(email));
 
 CREATE TABLE shadow.aaa_email_confirmation_log (
+	id SERIAL NOT NULL,
 	email_id INT NOT NULL,
 	timestamp_sent TIMESTAMP WITH TIME ZONE NOT NULL,
 	ttl INTERVAL NOT NULL DEFAULT '8 hours'::INTERVAL,
-	confirmation_code TEXT NOT NULL,
+	confirmation_code UUID NOT NULL,
 	confirmed BOOL NOT NULL DEFAULT FALSE,
 	ip_address INET,
 	timestamp_confirmed TIMESTAMP WITH TIME ZONE,
 	CHECK (confirmed = FALSE OR (confirmed = TRUE AND ip_address IS NOT NULL AND timestamp_confirmed IS NOT NULL)),
+	PRIMARY KEY(id),
 	FOREIGN KEY(email_id) REFERENCES shadow.aaa_email(id)
 );
 CREATE INDEX aaa_email_confirmation_log_email_idx ON shadow.aaa_email_confirmation_log(email_id);
+CREATE INDEX aaa_email_confirmation_log_confirmation_code_idx ON shadow.aaa_email_confirmation_log(confirmation_code);
 
 CREATE TABLE shadow.aaa_user (
 	id SERIAL,
@@ -96,7 +99,7 @@ CREATE TABLE shadow.aaa_login_attempts (
 	notes TEXT,
 	PRIMARY KEY(id),
 	FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
-	CHECK (success OR (NOT success AND notes IS NOT NULL))
+	CHECK(success OR (NOT success AND notes IS NOT NULL))
 );
 CREATE INDEX aaa_login_attempts_user_login_idx ON shadow.aaa_login_attempts(user_id, login_utc);
 

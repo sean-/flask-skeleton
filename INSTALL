@@ -101,7 +101,9 @@
    # on your database servers and is not present (in any capacity) along side
    # with your webserver password keys.
    pwgen -acn 32 1 > sql/db_password.hash
-   sed -e "s#DATABASE_PASSWORD_HASH#`cat sql/db_password.hash`#" sql/funcs.sql.in > sql/funcs.sql
+   psql -At skeleton skeleton -c 'SELECT uuid_generate_v4();' > sql/database_email.uuid
+   sed -e "s#DATABASE_PASSWORD_HASH#`cat sql/db_password.hash`#" \
+       -e "s#DATABASE_EMAIL_UUID#`cat sql/database_email.uuid`#" sql/funcs.sql.in > sql/funcs.sql
    psql skeleton skeleton_admin -1f sql/funcs.sql
 
    # CREATE TRIGGER commands are run outside of funcs.sql because there is no

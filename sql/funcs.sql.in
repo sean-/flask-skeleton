@@ -146,7 +146,9 @@ DECLARE
 	a_email      ALIAS FOR email;
 	a_password   ALIAS FOR password;
 	a_ip_address ALIAS FOR ip_address;
+	v_email_conf_code shadow.aaa_email_confirmation_log.confirmation_code%TYPE;
 	v_email_id        shadow.aaa_email.id%TYPE;
+	v_emailconflog_id shadow.aaa_email_confirmation_log.id%TYPE;
 	v_user_id         shadow.aaa_user.id%TYPE;
 	v_hashed_password shadow.aaa_user.hashpass%TYPE;
 BEGIN
@@ -154,7 +156,7 @@ BEGIN
 	SELECT e.id INTO v_email_id FROM shadow.aaa_email AS e WHERE e.email = a_email LIMIT 1;
 	IF found THEN
 		-- Should log that this IP address attempted a failed registration
-		ret := (FALSE, 'email'::TEXT, 'email address already in use'::TEXT);
+		ret := (FALSE, 'email'::TEXT, 'Email address already in use'::TEXT);
 		RETURN ret;
 	END IF;
 
@@ -170,8 +172,17 @@ BEGIN
 	-- circular FOREIGN KEYS.
 	INSERT INTO shadow.aaa_email (email, user_id) VALUES (a_email, 0) RETURNING id INTO STRICT v_email_id;
 	INSERT INTO shadow.aaa_user (hashpass, primary_email_id, registration_utc, registration_ip, active) VALUES (v_hashed_password, v_email_id, NOW(), a_ip_address, TRUE) RETURNING id INTO STRICT v_user_id;
+
+	-- Use DATABASE_EMAIL_UUID to secure email confirmation codes. As
+	-- long as DATABASE_EMAIL_UUID is not leaked, every email address
+	-- should have a unique confirmation code that can be recreated based
+	-- on the row id. This could have been done via a TRIGGER but I
+	-- wanted to show case a different method of pre-fetching the value
+	-- out of a SEQUENCE.
+	v_emailconflog_id := NEXTVAL('shadow.aaa_email_confirmation_log_id_seq'::regclass);
+	INSERT INTO shadow.aaa_email_confirmation_log (id, email_id, timestamp_sent, confirmation_code, ip_address) VALUES (v_emailconflog_id, v_email_id, NOW() AT TIME ZONE 'UTC', public.uuid_generate_v5('DATABASE_EMAIL_UUID'::UUID, v_emailconflog_id::TEXT), a_ip_address) RETURNING confirmation_code INTO STRICT v_email_conf_code;
 	UPDATE shadow.aaa_email SET user_id = v_user_id WHERE id = v_email_id;
-	ret := (TRUE, NULL::TEXT, NULL::TEXT);
+	ret := (TRUE, 'confirmation code'::TEXT, v_email_conf_code::TEXT);
 	RETURN ret;
 END;
 $$
