@@ -61,7 +61,8 @@ def login():
 
 @module.route('/logout')
 def logout():
-    session.pop('logged_in', None)
+    for k in session.keys():
+        session.pop(k)
     flash('You were logged out')
     return render_template('aaa/logout.html')
 
