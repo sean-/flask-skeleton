@@ -3,9 +3,7 @@
 {% block content %}
 <h1>Login</h1>
 
-<p>Use <code>user@example.com</code> and <code>admin</code> as your username/password.</p>
-
-{% if form.errors %}<p class="error"><strong>Unable to proceed with the provided authentication credentials.</strong>{% endif %}
+{% if form.errors %}<p class="error"><strong>Unable to proceed with the provided authentication credentials.</strong><br/><p>Do you want to <a href="{{ url_for('aaa.register') }}">register</a>?</p>{% endif %}
 {% from "_formhelpers.html" import render_field %}
 <form method="POST" action="">
   <dl>
