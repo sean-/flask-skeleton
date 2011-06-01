@@ -38,7 +38,7 @@ DECLARE
 	LOGIN_INTERVAL		INTERVAL NOT NULL DEFAULT '20 minutes'::INTERVAL;
 BEGIN
 	-- Check that the email is valid.
-	SELECT e.id, e.user_id INTO STRICT v_email_id, v_user_id FROM shadow.aaa_email AS e WHERE e.email = a_email;
+	SELECT e.id, e.user_id INTO v_email_id, v_user_id FROM shadow.aaa_email AS e WHERE e.email = a_email;
 	IF NOT found THEN
 		ret := (FALSE, 'email'::TEXT, 'Unknown email address'::TEXT);
 		RETURN ret;
