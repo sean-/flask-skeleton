@@ -191,7 +191,6 @@ $$
 	SECURITY DEFINER;
 
 
-DROP FUNCTION aaa.expire_session(TEXT);
 CREATE OR REPLACE FUNCTION aaa.expire_session(session_id TEXT) RETURNS BOOL AS $ses_expire$
 DECLARE
 	a_session_id ALIAS FOR session_id;
