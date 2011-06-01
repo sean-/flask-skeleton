@@ -40,7 +40,10 @@ BEGIN
 	-- Check that the email is valid.
 	SELECT e.id, e.user_id INTO v_email_id, v_user_id FROM shadow.aaa_email AS e WHERE e.email = a_email;
 	IF NOT found THEN
-		ret := (FALSE, 'email'::TEXT, 'Unknown email address'::TEXT);
+		-- Prevent someone from dictionary attacking the database
+		-- with possibly known email addresses. No point in logging
+		-- a failed login attempt with an unknown email address.
+		ret := (FALSE, 'vague'::TEXT, 'Unknown email address'::TEXT);
 		RETURN ret;
 	END IF;
 
@@ -54,13 +57,13 @@ BEGIN
 	WHERE ecl.email_id = v_email_id
 	ORDER BY ecl.timestamp_sent DESC LIMIT 1;
 	IF NOT found THEN
+		-- Raising an exception here because this means that
+		-- something was INSERTed in to the database
+		-- improperly. Normally I'd just RETURN FALSE, but given all
+		-- registration activities are handled via a highly
+		-- controlled FUNCTIONs (e.g. aaa.register()), RAISEing an
+		-- EXCEPTION is more appropriate.
 		RAISE EXCEPTION 'No email confirmation information for ecl.email_id %', v_email_id;
-	END IF;
-
-	IF NOT v_email_confirmed THEN
-		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Email Address Not Confirmed');
-		ret := (FALSE, 'email'::TEXT, 'Email Address Not Confirmed'::TEXT);
-		RETURN ret;
 	END IF;
 
 	-- Hash the user's password using a constant hash. Password inputs in
@@ -75,7 +78,6 @@ BEGIN
 	-- having a password hashed a single time. i.e. sha256('mypass') ==
 	-- bad.  sha256(sha256('mypass'), webserver_key) == infinitely better
 	v_pw_from_user := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
-
 	SELECT u.hashpass, u.active INTO v_pw_from_db, v_user_active
 		FROM shadow.aaa_user AS u WHERE u.id = v_user_id;
 	IF NOT FOUND THEN
@@ -87,35 +89,57 @@ BEGIN
 	END IF;
 
 	-- Access checks first: Is the user account active?
-	IF NOT u.active THEN
+	IF NOT v_user_active THEN
+		-- RETURN FALSE instead of being vague so that someone knows
+		-- their account has been deactivated (for whatever reason).
 		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Account not active');
-		ret := (FALSE, NULL::TEXT, 'Account not active'::TEXT);
+		ret := (FALSE, 'email'::TEXT, 'Account not active'::TEXT);
 		RETURN ret;
 	END IF;
 
 	-- Access check: Throttle the number of login attempts in the
-	-- configured interval
+	-- configured interval *before* actually checking to see if the
+	-- password matches.
 	SELECT COUNT(*) INTO v_login_attempts
 		FROM shadow.aaa_login_attempts AS ala
-		WHERE ala.user_id = v_user_id AND ala.login_utc >= (NOW() - LOGIN_INTERVAL);
+		WHERE
+			TRUE = TRUE
+			AND ala.user_id = v_user_id
+			AND ala.login_utc >= (NOW() - LOGIN_INTERVAL)
+			AND ala.success = FALSE;
 	IF v_login_attempts > MAX_LOGIN_ATTEMPTS THEN
 		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Too many login attempts');
-		ret := (FALSE, NULL::TEXT, 'Too many login attempts'::TEXT);
+		ret := (FALSE, 'email'::TEXT, 'Too many failed login attempts. Account locked.'::TEXT);
 		RETURN ret;
 	END IF;
 
 	-- Authentication checks second: Do passwords match?
 	IF v_pw_from_db != v_pw_from_user THEN
+		-- Passwords don't match? Oof. Suck on a vague message you
+		-- hacker douche bag you ... or innocent person who forgot or
+		-- typo'ed their password.
 		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Password incorrect');
-		ret := (FALSE, 'password'::TEXT, 'Password incorrect'::TEXT);
+		ret := (FALSE, 'vague'::TEXT, 'Password incorrect'::TEXT);
+		RETURN ret;
+	END IF;
+
+	-- Check to make sure they've confirmed their email address.
+	IF NOT v_email_confirmed THEN
+		-- Successfully log a valid login attempt for users who have
+		-- entered the right password, but haven't confirmed their
+		-- email address yet. The above throttling check relies on
+		-- failed login attempts so frustrated and impatient users
+		-- who can't read will still get in once they calm down and
+		-- RTFS (Read The Fucking Screen) and check their email.
+		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, TRUE, 'Email Address Unconfirmed');
+		ret := (FALSE, 'email'::TEXT, 'Email Address Unconfirmed'::TEXT);
 		RETURN ret;
 	END IF;
 
 	-- At this point, the user should be granted access and a session
-	-- should be created. Session creation will invalidate other sessions
-	-- automatically thanks to some ON INSERT triggers.
-
-	INSERT INTO shadow.aaa_sessions (user_id, session_id, ip_addr, valid, start_utc, end_utc, renewal_interval) VALUES (v_user_id, a_session_id, a_ip_address, TRUE, NOW(), NOW() + a_renewal_interval, a_renewal_interval);
+	-- should be created. The INSERT triggers on shadow.aaa_session will
+	-- invalidate other sessions automatically.
+	INSERT INTO shadow.aaa_session (user_id, session_id, ip_addr, valid, start_utc, end_utc, renewal_interval) VALUES (v_user_id, a_session_id, a_ip_address, TRUE, NOW(), NOW() + a_renewal_interval, a_renewal_interval);
 
 	-- Record the success
 	INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success) VALUES (v_user_id, NOW(), a_ip_address, TRUE);

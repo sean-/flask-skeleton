@@ -53,20 +53,32 @@ def login():
                     bindparam('ip', remote_addr),
                     bindparam('sid', session['i']),
                     bindparam('idle',idle)]))
+
+        # Explicitly commit regardless of the remaining logic. The database
+        # did the right thing behind the closed doors of aaa.login() and we
+        # need to make sure that the logging to shadow.aaa_login_attempts is
+        # COMMIT'ed so that customer support can help the poor, frustrated
+        # (stupid?) users.
+        ses.commit()
         row = result.first()
         if row[0] == True:
-            ses.commit()
             flash('Successfully logged in as %s' % (form.email.data))
             return redirect(url_for('home.index'))
         else:
             # Return a useful error message from the database
             try:
-                # Perform some super nice handholding
+                # If the database says be vague, we'll be vague in our error
+                # messages. When the database commands it we obey, got it?
                 field = form.__getattribute__(row[1])
-                if field.name == 'email':
-                    # If brute force weren't such an issue, we'd just append
-                    # a field error like below.
-                    form.errors['Bogus'] = 'Populating form.errors with garbage'
+                if field.name == 'vague':
+                    # Set bogus data so that 'form.errors == True'. If brute
+                    # force weren't such an issue, we'd just append a field
+                    # error like below. If you want to get the specifics of
+                    # why the database rejected a user, temporarily change
+                    # the above 'vague' to something that the database
+                    # doesn't return, such as 'EDRAT' or something equally
+                    # POSIXly funny.
+                    form.errors['EPERM'] = 'There is no intro(2) error code for web errors'
                     pass
                 else:
                     field.errors.append(row[2])
