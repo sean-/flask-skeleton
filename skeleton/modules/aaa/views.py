@@ -43,6 +43,14 @@ def login():
         else:
             flask.abort(500)
 
+        # Generate a new session ID upon login. If someone steals my session
+        # id, I want to explicitly prevent its use as a way of inject
+        # unauthenticated session information in to an authenticated
+        # session. In the future once pgmemcache has been hooked up to the
+        # database, the old session id will be expired from memcache
+        # automatically.
+        new_sess_id = gen_session_id()
+
         ses = db.session
         result = ses.execute(
             # SELECT result, "column", message FROM aaa.login(email := 'user@example.com', password := '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co', ip_address := '11.22.33.44', session_id := 'user session id from flask', renewal_interval := '60 minutes'::INTERVAL) AS (result BOOL, "column" TEXT, message TEXT);
@@ -51,7 +59,7 @@ def login():
                     bindparam('email', form.email.data),
                     bindparam('pw', shapass, type_=LargeBinary),
                     bindparam('ip', remote_addr),
-                    bindparam('sid', session['i']),
+                    bindparam('sid', new_sess_id),
                     bindparam('idle',idle)]))
 
         # Explicitly commit regardless of the remaining logic. The database
@@ -62,6 +70,7 @@ def login():
         ses.commit()
         row = result.first()
         if row[0] == True:
+            session['i'] = new_sess_id
             session['li'] = True
             flash('Successfully logged in as %s' % (form.email.data))
             return redirect(url_for('home.index'))
