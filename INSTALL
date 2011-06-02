@@ -225,3 +225,32 @@
 
 12) Feel free to re-run the sql/perms.sql script as many times as you'd
     like. \dp, \ddp and \dn+ are your friends.
+
+
+13) Debugging notes. With your environment activated:
+
+    # Nearly every time I need to do any first time work with SQLAlchemy (or
+    # any real database work), I fire up a terminal window and execute the
+    # following commands:
+    [flask-skeleton] % python
+    >>> from skeleton import create_app
+    >>> app = create_app()
+    >>> ctx = app.test_request_context()
+    >>> ctx.push()
+    >>> from skeleton import db
+    >>> ses = db.session
+    # Which is why I dump all of that stuff in a shell.py file:
+    % python -i shell.py
+
+    # From here, I can do useful things and figure out how to map objects
+    # together in the ORM without pulling my hair out.
+    >>> from mod3.models import Tag, Page
+    >>> p = Page.query.filter_by(id = 1).first()
+    >>> p.__dict__
+{'url': u'http://stackjet.com/mod3/page/submit', '_sa_instance_state': <sqlalchemy.orm.state.InstanceState object at 0x1023a9490>, 'id': 1}
+    >>> dir(p)
+    >>> t = Tag.query.filter_by(name = 'mytag').first()
+    >>> t.pages.filter(Page.id==p.id).first() is None
+
+    # I frequently dump the tedium of such setups in to debugging scripts:
+    >>> from debug_mod3 import *
