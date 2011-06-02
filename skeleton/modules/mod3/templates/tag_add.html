@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Add a Tag to Page {{page.id}}</h1>
 
-<p>What tag would you like to add to <a href="{{ page.url }}">{{page.url}}</a>?</p>
+<p>What tag would you like to add to <a href="{{ url_for('page_tags', page_id=page.id) }}">{{page.url}}</a>?</p>
 
 {% if form.errors %}<p class="error"><strong>Unable to submit a tag to page {{page.id}}. See error messages below.</strong>{% endif %}
 {% from "_formhelpers.html" import render_field %}

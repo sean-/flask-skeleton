@@ -4,6 +4,7 @@ from mod3 import module
 from mod3.forms import PageAddTagForm, PageSubmitForm
 from mod3.models import Page, PageTags, Tag
 from skeleton import db
+from aaa import login_required
 
 
 @module.route('/')
@@ -16,14 +17,17 @@ def page_list():
     entries = Page.query.order_by(Page.url).all()
     return render_template('mod3/pages.html', pages=entries)
 
-
 @module.route('/page/submit', methods=('GET','POST'))
+@login_required
 def page_submit():
     form = PageSubmitForm()
     if form.validate_on_submit():
-        page = Page(form.url.data)
         ses = db.session
-        ses.add(page)
+        page = Page.query.filter_by(url = form.url.data.lower()).first()
+        # Only add non-duplicate pages
+        if page is None:
+            page = Page(form.url.data)
+            ses.add(page)
         ses.commit()
         return redirect(url_for('page_tags', page_id = page.id))
     return render_template('mod3/page_submit.html', form=form)
@@ -40,13 +44,14 @@ def page_tags(page_id):
 
 
 @module.route('/tag/page/<int:page_id>/add', methods=('GET','POST'))
+@login_required
 def tag_add(page_id):
     page = Page.query.filter_by(id = page_id).first_or_404()
     form = PageAddTagForm()
     ses = db.session
     if form.validate_on_submit():
         # See if the tag already exists
-        tag = Tag.query.filter_by(name = form.tag.data).first()
+        tag = Tag.query.filter_by(name = form.tag.data.lower()).first()
         if tag is None:
             # Create the tag
             tag = Tag(name = form.tag.data)
