@@ -7,5 +7,6 @@ bin/
 include/
 lib/
 
-# Don't ignore ssl.key and ssl.cert... don't add them either.
-#ssl.(cert|key)
+# Don't loose ssl.key and ssl.cert... don't add them either.
+ssl.cert
+ssl.key
