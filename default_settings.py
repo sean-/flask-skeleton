@@ -1,5 +1,14 @@
 # Global configuration
 BROWSER_SECRET_KEY = ''
+
+# When behind a load balancer, set CANONICAL_NAME to the value contained in
+# Host headers (e.g. 'www.example.org')
+CANONICAL_NAME = '127.0.0.1'
+
+# When behind a load balancer, set CANONICAL_PORT to the value contained in
+# Host headers (normally it will be '80' in production)
+CANONICAL_PORT = '5000'
+
 DATABASE_URI_FMT = 'postgresql+psycopg2://{username}:{password}@{hostname}:{port}/{dbname}'
 DB_HOST = '127.0.0.1'
 DB_NAME = 'skeleton'
@@ -13,6 +22,7 @@ DB_ADMIN = 'skeleton_admin'
 DB_USER = 'skeleton_www'
 DEBUG = False
 DEBUG_TOOLBAR = False
+LISTEN_HOST = '127.0.0.1'
 PASSWORD_HASH = ''
 SECRET_KEY = ''
 SESSION_BYTES = 25
@@ -26,7 +36,7 @@ USE_SSL = True
 SQLALCHEMY_ECHO = False
 
 # If users want to pass specific werkzeug options
-WERKZEUG_OPTS = {'port' : 5000}
+WERKZEUG_OPTS = {'host': LISTEN_HOST, 'port' : 5000}
 
 # Import user-provided values
 try:
@@ -135,3 +145,7 @@ SQLALCHEMY_DATABASE_URI = DATABASE_URI_FMT.format(**
         'dbname':   DB_NAME,
         'schema':   DB_SCHEMA,
     })
+
+# Explicitly specify what's a local request
+scheme = 'https' if USE_SSL else 'http'
+LOCAL_REQUEST = '%s://%s:%s/' % (scheme, CANONICAL_NAME, CANONICAL_PORT)

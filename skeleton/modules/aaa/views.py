@@ -1,27 +1,22 @@
-# -*- coding: utf-8 -*-
-import base64, hashlib, M2Crypto
+import hashlib
 
-from flask import current_app, flash, redirect, render_template, request, session, url_for
+from flask import current_app, flash, g, redirect, render_template, request, session, url_for
 from sqlalchemy.sql.expression import bindparam, text
 from sqlalchemy.types import LargeBinary
 
 from skeleton import db
+from skeleton.lib import fixup_destination_url, local_request
 from aaa.forms import LoginForm, RegisterForm
-from aaa import module
-
-def gen_session_id():
-    """ Generates a session ID """
-    # Be kind to future support people and developers by using a base32
-    # encoded session id. Why is this cool? Read RFC3548 §5 and rejoice
-    # at the lack of ambiguity regarding "one", "ell", "zero" and
-    # "ohh". You can thank me later.
-    return base64.b32encode(M2Crypto.m2.rand_bytes(current_app.config['SESSION_BYTES']))
+from aaa import gen_session_id, module
 
 @module.route('/login', methods=('GET','POST'))
 def login():
     form = LoginForm()
+    # Generate a session ID for them if they don't have one
     if not session.has_key('i'):
         session['i'] = gen_session_id()
+
+    fixup_destination_url('dsturl','post_login_url')
 
     if form.validate_on_submit():
         remote_addr = request.environ['REMOTE_ADDR']
@@ -73,7 +68,10 @@ def login():
             session['i'] = new_sess_id
             session['li'] = True
             flash('Successfully logged in as %s' % (form.email.data))
-            return redirect(url_for('home.index'))
+            if 'post_login_url' in session:
+                return redirect(session.pop('post_login_url'))
+            else:
+                return redirect(url_for('home.index'))
         else:
             session.pop('li', None)
             # Return a useful error message from the database
@@ -100,11 +98,24 @@ def login():
 
 @module.route('/logout')
 def logout():
+    dsturl = None
+    if request.referrer and local_request(request.referrer):
+        dsturl = request.referrer
+    else:
+        dsturl = None
+
+    already_logged_out = True if 'li' not in session else False
+
     # Nuke every key in the session
     for k in session.keys():
         session.pop(k)
-    flash('You were logged out')
-    return render_template('aaa/logout.html')
+
+    if already_logged_out:
+        flash('Session cleared for logged out user')
+    else:
+        flash('You were logged out')
+
+    return render_template('aaa/logout.html', dsturl=dsturl)
 
 
 @module.route('/register', methods=('GET','POST'))

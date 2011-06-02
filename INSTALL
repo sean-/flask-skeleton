@@ -222,6 +222,8 @@
     # Make a symlink for everything in to the static dir. e.g.:
     # ln -s ../skeleton/modules/mod1/static mod1
 
+    # Be sure to change your CANONICAL_NAME and CANONICAL_PORT settings once
+    # you move in to production.
 
 12) Feel free to re-run the sql/perms.sql script as many times as you'd
     like. \dp, \ddp and \dn+ are your friends.

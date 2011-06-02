@@ -14,4 +14,10 @@
 {% endfor %}
 </table>
 
+{% if session.li %}
+<a href="{{url_for('page_submit')}}">Submit a new page</a>
+{% else %}
+<a href="{{url_for('aaa.login')}}">Login to submit a new page</a>
+{% endif %}
+
 {% endblock %}
