@@ -18,7 +18,7 @@
       <li><a href="{{ url_for('mod2.index') }}">Mod2 View</a> - Redirect Examples</li>
       <li><a href="{{ url_for('mod3.some_random_view') }}">Mod3 View</a> - Forms</li>
 {% if not session.li %}
-      <li><a href="{{ url_for('aaa.login') }}">Login</a></li>
+      <li><a href="{{ url_for('aaa.login', dsturl=request.url) }}">Login</a></li>
       <li><a href="{{ url_for('aaa.register') }}">Register</a></li>
 {% else %}
       <li><a href="{{ url_for('aaa.logout') }}">Logout</a></li>
