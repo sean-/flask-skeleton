@@ -98,11 +98,24 @@ def login():
 
 @module.route('/logout')
 def logout():
+    dsturl = None
+    if request.referrer and local_request(request.referrer):
+        dsturl = request.referrer
+    else:
+        dsturl = None
+
+    already_logged_out = True if 'li' not in session else False
+
     # Nuke every key in the session
     for k in session.keys():
         session.pop(k)
-    flash('You were logged out')
-    return render_template('aaa/logout.html')
+
+    if already_logged_out:
+        flash('Session cleared for logged out user')
+    else:
+        flash('You were logged out')
+
+    return render_template('aaa/logout.html', dsturl=dsturl)
 
 
 @module.route('/register', methods=('GET','POST'))
