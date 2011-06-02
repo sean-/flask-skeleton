@@ -1,6 +1,9 @@
-from flask import render_template
+from flask import flash, redirect, render_template, url_for
+
 from mod3 import module
+from mod3.forms import PageSubmitForm
 from mod3.models import Page, Tag
+from skeleton import db
 
 
 @module.route('/')
@@ -12,6 +15,18 @@ def some_random_view():
 def page_list():
     entries = Page.query.all()
     return render_template('mod3/pages.html', pages=entries)
+
+
+@module.route('/page/submit', methods=('GET','POST'))
+def page_submit():
+    form = PageSubmitForm()
+    if form.validate_on_submit():
+        page = Page(form.url.data)
+        ses = db.session
+        ses.add(page)
+        ses.commit()
+        return redirect(url_for('page_tags', page_id = page.id))
+    return render_template('mod3/page_submit.html', form=form)
 
 
 @module.route('/page/tags/<int:page_id>')

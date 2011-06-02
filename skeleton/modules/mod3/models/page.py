@@ -9,3 +9,6 @@ class Page(db.Model):
         backref=db.backref('pages', lazy='dynamic'))
     __tablename__ = 'page'
     __table_args__ = {'schema':'public'}
+
+    def __init__(self, url = url):
+        self.url = url
