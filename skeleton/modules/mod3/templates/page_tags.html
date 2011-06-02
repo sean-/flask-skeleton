@@ -7,11 +7,16 @@
 
 <table border="1">
   <tr><th>Tag ID</th><th>Tag Name</th></tr>
-{% for tag in page.tags %}
+{% for tag in tags %}
   <tr><td>{{ tag.id }}</td><td><a href="{{ url_for('tag_pages', tag_id=tag.id) }}">{{ tag.name }}</a></td></tr>
 {% else %}
   <tr><td colspan="2">No tags for page {{ page.id }}.</td></tr>
 {% endfor %}
 </table>
+
+{% if session.li %}
+<a href="{{url_for('tag_add', page_id=page.id)}}">Submit a tag for page {{page.id}}</a><br/>
+{% endif %}
+<a href="{{url_for('page_list')}}">List all pages</a>
 
 {% endblock %}

@@ -1,8 +1,8 @@
 from flask import flash, redirect, render_template, url_for
 
 from mod3 import module
-from mod3.forms import PageSubmitForm
-from mod3.models import Page, Tag
+from mod3.forms import PageAddTagForm, PageSubmitForm
+from mod3.models import Page, PageTags, Tag
 from skeleton import db
 
 
@@ -32,7 +32,37 @@ def page_submit():
 @module.route('/page/tags/<int:page_id>')
 def page_tags(page_id):
     page = Page.query.filter_by(id = page_id).first_or_404()
-    return render_template('mod3/page_tags.html', page=page)
+    # Get a list of all of the tags that are on a given page. Note how we
+    # created the join from the origin table, Tag, all the way over to the
+    # Page table through the mapping table.
+    tags = Tag.query.join(PageTags, Page).filter(Page.id == page.id).order_by('name').all()
+    return render_template('mod3/page_tags.html', page=page, tags=tags)
+
+
+@module.route('/tag/page/<int:page_id>/add', methods=('GET','POST'))
+def tag_add(page_id):
+    page = Page.query.filter_by(id = page_id).first_or_404()
+    form = PageAddTagForm()
+    ses = db.session
+    if form.validate_on_submit():
+        # See if the tag already exists
+        tag = Tag.query.filter_by(name = form.tag.data).first()
+        if tag is None:
+            # Create the tag
+            tag = Tag(name = form.tag.data)
+            ses.add(tag)
+            flash('Adding tag %s' % tag.name)
+        else:
+            flash('Tag %s already exists with id %s, not adding' % (tag.name, tag.id))
+        # See if there's a mapping row exists or not. If not, add one.
+        if tag.pages.filter(Page.id == page.id).first() is None:
+            tag.pages.append(page)
+            flash('Adding tag %s to page %s' % (tag.name, page.url))
+        else:
+            flash('tag.id %s already exists for page %s' % (tag.id, page.id))
+        ses.commit()
+        return redirect(url_for('page_tags', page_id = page.id))
+    return render_template('mod3/tag_add.html', form=form, page=page)
 
 
 @module.route('/tag/pages/<int:tag_id>')
