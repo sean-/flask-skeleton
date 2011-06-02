@@ -8,7 +8,7 @@
 <table border="1">
   <tr><th>ID</th><th>Tag Name</th></tr>
 {% for tag in tags %}
-  <tr><td>{{ tag.id }}</td><td>{{ tag.name }}</td></tr>
+  <tr><td>{{ tag.id }}</td><td><a href="{{ url_for('tag_pages', tag_id=tag.id) }}">{{ tag.name }}</a></td></tr>
 {% else %}
   <tr><td colspan="2">No entries in <code>public.tag</code>. Sad panda.</td></tr>
 {% endfor %}

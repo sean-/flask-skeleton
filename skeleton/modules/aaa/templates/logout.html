@@ -3,7 +3,15 @@
 {% block content %}
 <h1>Logout</h1>
 
-<p>This will be the logout page.</p>
+<p>You have logged out successfully. Quick Links:</p>
+<ul>
+{% if dsturl %}
+  <li><a href="{{dsturl}}">Return to your previous page</a></li>
+{% endif %}
+  <li><a href="{{url_for('aaa.login')}}">Login</a></li>
+  <li><a href="{{url_for('aaa.register')}}">Register</a></li>
+  <li><a href="{{url_for('home.index')}}">Skeleton Homepage</a></li>
+</ul>
 {% endblock %}
 
 

@@ -1,0 +1,18 @@
+{% extends "layout/base.html" %}
+{% block title %}mod3/submit{% endblock %}
+{% block content %}
+<h1>Submit Page</h1>
+
+{% if form.errors %}<p class="error"><strong>Unable to submit a page. See error messages below.</strong>{% endif %}
+{% from "_formhelpers.html" import render_field %}
+<form method="POST" action="">
+  <dl>
+    {{ render_field(form.url) }}
+    <dd>{{ form.submit }}</dd>
+  </dl>
+  {{ form.hidden_tag() }}
+</form>
+</p>
+{% endblock %}
+
+

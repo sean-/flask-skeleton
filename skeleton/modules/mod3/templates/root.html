@@ -5,7 +5,9 @@
 <p class="important">Welcome to the mod3 module! <a href="{{ url_for('.static', filename='mod3/asset.txt') }}">mod3 asset (note '.static' and not 'static')</a></p>
 <p>mod3 demonstrates adding a third url_prefix to an app (e.g. '<code>/mod3</code>'). Note trailing slashes.</p>
 <ul>
-  <li><a href="{{ url_for('page_list') }}">Page List</a></li>
+  <li><a href="{{ url_for('page_list') }}">Page List</a>{% if session.li %}
+    - <a href="{{ url_for('page_submit') }}">Submit a New Page</a>
+{% endif %}</li>
   <li><a href="{{ url_for('tag_list') }}">Tag List</a></li>
 </ul>
 {% endblock %}
