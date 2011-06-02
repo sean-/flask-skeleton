@@ -1,3 +1,5 @@
 funcs.sql
-# Don't ignore db_password.hash that way people keep it around. If you loose this, you loose the ability to log users in!!!!
-#db_password.hash
+# Don't loose db_password.hash! If you loose the contents of that file, you loose the ability to log users in!!!! Mass-password resets suck.
+db_password.hash
+# Don't loose db_email.uuid. Not the end of the world if you do, but you loose the ability to regenerate the email confirmation code UUIDs.
+db_email.uuid
