@@ -13,7 +13,7 @@ def some_random_view():
 
 @module.route('/pages')
 def page_list():
-    entries = Page.query.all()
+    entries = Page.query.order_by(Page.url).all()
     return render_template('mod3/pages.html', pages=entries)
 
 
@@ -43,5 +43,5 @@ def tag_pages(tag_id):
 
 @module.route('/tags')
 def tag_list():
-    entries = Tag.query.all()
-    return render_template('mod3/tags.html', tags=entries)
+    tags = Tag.query.order_by('name').all()
+    return render_template('mod3/tags.html', tags=tags)
