@@ -1,0 +1,47 @@
+Things still in progress:
+
+*) Add per-user timezone support
+
+*) Cache a user-object upon login in memcache
+
+*) Beef up the @logged_in decorator so that it:
+
+   1) checks memcache for a matching session
+   2) Logs a user out if their session has expired (or updates it accordingly)
+   3) Populates memcache with a user object upon cache miss
+
+*) Add authorization decorators (maybe)
+
+*) Unit testing framework
+
+*) Migrate to using setup.py instead of providing a fixed requirements.txt
+
+*) Scripting via Flask-Script (both shell setup and cron-like jobs)
+
+*) Localization
+
+*) Services API example (XML, maybe protobuf)
+
+
+
+Things that are demonstrated well enough:
+
+*) ORM Layer and examples
+
+*) Caching of objects, fragments and views via memcache
+
+*) Database schema and permissions
+
+*) Registration and login/logout
+
+*) Session management
+
+*) Use of PostgreSQL functions
+
+*) Modularized development
+
+*) Jinja templates and Jinja2 template filters
+
+*) Debugging toolbar
+
+*) Static assets management

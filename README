@@ -1,3 +1,6 @@
+	This is a "LAMP" stack done right... but using *NIX (FreeBSD/Mac),
+	nginx, memcache, python and postgresql. :~]
+
 Recently someone asked me what my preferred web framework was these days (it
 feels like I've tried them all and have developed a few opinions along the
 way). It's Flask (as of May 2011), but explaining the bootstrapping process
