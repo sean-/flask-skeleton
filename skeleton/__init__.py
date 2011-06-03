@@ -1,11 +1,15 @@
 import os
 import sys
 
+import json
+
 from flask import Flask
 from flaskext.cache import Cache
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
 from repoze.browserid.middleware import BrowserIdMiddleware
+from werkzeug.contrib.securecookie import SecureCookie
+
 import filters
 
 __all__ = ['create_app','db']
@@ -155,3 +159,8 @@ cache = Cache()
 
 # Models are added to the db's metadata when create_app() is actually called.
 db = SQLAlchemy()
+
+# Heed SecureCookie.rst's warning and use json instead of pickle for
+# serialization.
+class JSONSecureCookie(SecureCookie):
+    serialization_method = json
