@@ -5,6 +5,7 @@ from flask import Flask
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
 from repoze.browserid.middleware import BrowserIdMiddleware
+import filters
 
 __all__ = ['create_app','db']
 
@@ -25,6 +26,7 @@ def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')
     load_config(app)
     db.init_app(app)
+    filters.init_app(app)
     register_local_modules(app)
 
     app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
