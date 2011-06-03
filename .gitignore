@@ -8,5 +8,5 @@ include/
 lib/
 
 # Don't loose ssl.key and ssl.cert... don't add them either.
-ssl.cert
-ssl.key
+#ssl.cert
+#ssl.key

@@ -2,9 +2,11 @@ import os
 import sys
 
 from flask import Flask
+from flaskext.cache import Cache
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
 from repoze.browserid.middleware import BrowserIdMiddleware
+import filters
 
 __all__ = ['create_app','db']
 
@@ -24,7 +26,9 @@ MODULES = [
 def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')
     load_config(app)
+    cache.init_app(app)
     db.init_app(app)
+    filters.init_app(app)
     register_local_modules(app)
 
     app.wsgi_app = ProxyFixupHelper(app.wsgi_app)
@@ -108,6 +112,8 @@ class ProxyFixupHelper(object):
                 environ['REMOTE_ADDR'] = host
         return self.app(environ, start_response)
 
+# Cache
+cache = Cache()
 
 # SQL ORM Missive:
 #

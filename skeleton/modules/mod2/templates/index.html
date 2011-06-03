@@ -16,6 +16,13 @@
 
 <p>Redirects back to mod2's index: <a href="redirect_here">the bad way</a> and <a href="{{ url_for('redir_index') }}">good way</a>. And redirect examples back to home's index the <a href="redirect_home">bad way</a> and <a href="{{url_for('redir_index2')}}">good way</a>.</p>
 
+<h2>mod2 caching examples</h2>
+
+<ul>
+  <li><a href="{{ url_for('cached_always') }}">Always cached page, 15sec ttl</a></li>
+  <li><a href="{{ url_for('cache_logged_out') }}">Cached for logged out users, 60sec ttl, otherwise uncached for logged in users</a></li>
+</ul>
+
 {% endblock %}
 {% block footer %}
 {{ super() }}
