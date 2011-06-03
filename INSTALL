@@ -95,9 +95,6 @@
 
 5.1) Patch(es).
 
-     # Backport Flask-Cache's fixes for memoize() out of master:
-     % patch -d lib/python2.7/site-packages/ -p1 < patches/flaskext::cache::init_9b02c37bdad5.patch
-
      # For now, Werkzeug doesn't support python-libmemcached, but it can by
      # applying the following patch to your install (versions 0.6.2 & 0.7.0):
      % patch -d lib/python2.7/site-packages/ -p1 < patches/werkzeug::contrib::cache_452e8402d056.patch-0.6.2
