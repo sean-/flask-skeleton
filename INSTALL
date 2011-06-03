@@ -79,8 +79,9 @@
    # Tweak your path to where pg_config(1) is hidden
    setenv PATH /opt/local/lib/postgresql91/bin/:${PATH}
 
-   # And tweak the build environment slightly for python-libmemcached
-   setenv CPPFLAGS -I/opt/local/include
+   # And tweak the build environment slightly for python-libmemcached and
+   # M2Crypto
+   setenv CPPFLAGS -I/opt/local/include:-I/opt/local/include/openssl
 
    # Break the installation down in to two steps: download and install (if
    # something fails, you don't want to start over again from scratch). ~/tmp
