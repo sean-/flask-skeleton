@@ -16,9 +16,33 @@
     % chsh /bin/tcsh    # Change your default shell once you feel comfortable
 
 
+0b) Download and install python 2.7.1 (NOTE: python 3.X is a no-go with
+   Flask - don't get clever)
+
+   % sudo port install python27
+
+
+0c) Download and install libmemcached >= 0.4.0. I'm going to leave this as a
+   an exercise to the reader as to how to best do this in your environment,
+   but if you're on a mac with MacPorts:
+
+   % sudo port install libmemcached
+
+
+0d) Download and install PostgreSQL. Similar to the above, but since this is
+   a database and not a random library, you're on your own for not being a
+   nub:
+
+   % sudo port install postgresql91-server
+
+   # Not required, but man pages are handy!
+   % sudo port install postgresql91-doc
+
+
 1) Rename from 'skeleton' to 'myapp':
 
-   # At some point I'll change this step to be scripted
+   # At some point I'll change this step to be scripted (hell, I might even
+   # actually test this step at some point)
    find . -type f -print0 | xargs -0 -n 1 perl -p -i -e '#skeleton#myapp#go'
    mv skeleton myapp
    # Search for and replace the remaining references to 'skeleton'
@@ -28,7 +52,8 @@
 
 2) Start the database:
 
-   # MacPorts installed version of PostgreSQL 9.1
+   # MacPorts installed version of PostgreSQL 9.1, I run this in a different
+   # terminal when developing so I can see what's going on.
    sudo su - pgsql -c '/opt/local/lib/postgresql91/bin/postgres -D /opt/local/var/db/postgresql91/defaultdb'
 
 
@@ -40,7 +65,7 @@
 
 4) Activate the virtualenv:
 
-   # If you installed the .cshrc file listed above and use tcsh(1), just do this:
+   # If you installed the .cshrc file mentioned above and use tcsh(1), just do this:
    chmod 0600 .enter.tcsh
    cd $PWD
 
@@ -54,10 +79,12 @@
    # Tweak your path to where pg_config(1) is hidden
    setenv PATH /opt/local/lib/postgresql91/bin/:${PATH}
 
+   # And tweak the build environment slightly for python-libmemcached
+   setenv CPPFLAGS -I/opt/local/include
+
    # Break the installation down in to two steps: download and install (if
    # something fails, you don't want to start over again from scratch). ~/tmp
    # is created by .cshrc.
-
    pip install -U --download-cache=~/tmp -I -r requirements.txt --no-install
    pip install -U --download-cache=~/tmp -I -r requirements.txt --no-download
 
@@ -65,11 +92,19 @@
    pip freeze | sort > requirements.txt
    git diff requirements.txt
 
+5.1) Patch(es).
+
+     # Backport Flask-Cache's fixes for memoize() out of master:
+     % patch -d lib/python2.7/site-packages/ -p1 < patches/flaskext::cache::init_9b02c37bdad5.patch
+
+     # For now, Werkzeug doesn't support python-libmemcached, but it can by
+     # applying the following patch to your install:
+     % patch -d lib/python2.7/site-packages/ -p1 < patches/werkzeug::contrib::cache_452e8402d056.patch
 
 6) Setup debugging:
 
    echo 'DEBUG = True' >> local_settings.py
-   echo 'TESTING = True' >> local_settings.py
+   echo 'TESTING = False' >> local_settings.py
 
    When you go in to production, be sure to remove these two lines!!!
 
@@ -189,31 +224,7 @@
 
 
 
-9) Remove the remnants of git:
-
-   rm -rf .git .gitignore
-
-
-10) Setup fossil (my preferred SCM of choice atm: http://www.fossil-scm.org/):
-
-   alias fs fossil
-   mkdir -p ~/src/.fossils
-   fs new ~/src/.fossils/skeleton.fossil
-   fs open ~/src/.fossils/skeleton.fossil
-
-   # Settings generated via:
-   # fs set | grep local | awk '{print "fs set " $1 " " $3}'
-   fs set autosync 1
-   fs set clearsign 1
-   fs set editor vi
-   fs set ignore-glob bin/*,include/*,lib/*,local_settings.py,*.pyc
-   fs set localauth 0
-   fs set pgp-command gpg2
-   fs addremove
-   fs ci -m "Initial checkin of skeleton app"
-
-
-11) In production, you will need to combine all of your static assets
+9) In production, you will need to combine all of your static assets
     together and probably have them served by nginx. Something like:
 
     mkdir static
@@ -225,11 +236,11 @@
     # Be sure to change your CANONICAL_NAME and CANONICAL_PORT settings once
     # you move in to production.
 
-12) Feel free to re-run the sql/perms.sql script as many times as you'd
+10) Feel free to re-run the sql/perms.sql script as many times as you'd
     like. \dp, \ddp and \dn+ are your friends.
 
 
-13) Debugging notes. With your environment activated:
+11) Debugging notes. With your environment activated:
 
     # Nearly every time I need to do any first time work with SQLAlchemy (or
     # any real database work), I fire up a terminal window and execute the
@@ -254,5 +265,6 @@
     >>> t = Tag.query.filter_by(name = 'mytag').first()
     >>> t.pages.filter(Page.id==p.id).first() is None
 
-    # I frequently dump the tedium of such setups in to debugging scripts:
+    # I frequently dump the tedium of that kind of debugging in to debugging
+    # scripts (pro tip: echo '/debug_*' >> .git/info/exclude)
     >>> from debug_mod3 import *

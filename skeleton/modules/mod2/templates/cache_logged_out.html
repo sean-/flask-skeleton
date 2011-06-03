@@ -1,0 +1,35 @@
+{% extends "layout/base.html" %}
+{% block title %}mod2/cached_view{{ super() }}{% endblock %}
+{% block content %}
+<h1>mod2 hit count: {{count}}</h1>
+
+<p>This page will always be uncached for logged in users. Logged out users
+will not see increases to the counter nor will they increment the counter. In
+the mean time, logged in users will see the counter increment as
+expected. Logged in users will not reset the cache.</p>
+
+<a href="{{url_for('cache_logged_out')}}">Click to refresh</a>.</p>
+
+{% if not session.li %}
+<table>
+  <tr>
+    <td>Page was generated at:</td>
+    <td>{{time|strftime}}</td>
+  </tr>
+  <tr>
+    <td>Page Expires at:</td>
+    <td>{{expires|strftime}}</td>
+  </tr>
+  <tr>
+    <td>JavaScript time is:</td>
+    <td><script type="text/javascript" language="JavaScript"><!--
+var t = new Date();
+document.write('Time is ' + t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds());
+//--></script></td>
+  </tr>
+</table>
+{% endif %}
+{% endblock %}
+{% block footer %}
+Can't wait
+{% endblock %}
