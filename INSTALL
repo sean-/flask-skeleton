@@ -81,7 +81,7 @@
 
    # And tweak the build environment slightly for python-libmemcached and
    # M2Crypto
-   setenv CPPFLAGS -I/opt/local/include:-I/opt/local/include/openssl
+   setenv CPPFLAGS '-I/opt/local/include -I/opt/local/include/openssl'
 
    # Break the installation down in to two steps: download and install (if
    # something fails, you don't want to start over again from scratch). ~/tmp
@@ -99,8 +99,8 @@
      % patch -d lib/python2.7/site-packages/ -p1 < patches/flaskext::cache::init_9b02c37bdad5.patch
 
      # For now, Werkzeug doesn't support python-libmemcached, but it can by
-     # applying the following patch to your install:
-     % patch -d lib/python2.7/site-packages/ -p1 < patches/werkzeug::contrib::cache_452e8402d056.patch
+     # applying the following patch to your install (versions 0.6.2 & 0.7.0):
+     % patch -d lib/python2.7/site-packages/ -p1 < patches/werkzeug::contrib::cache_452e8402d056.patch-0.6.2
 
 6) Setup debugging:
 

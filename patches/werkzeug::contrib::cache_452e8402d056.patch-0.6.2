@@ -1,0 +1,45 @@
+--- werkzeug/contrib/cache.py.orig	2011-06-02 22:25:16.000000000 -0700
++++ werkzeug/contrib/cache.py	2011-06-02 22:31:26.000000000 -0700
+@@ -276,24 +276,35 @@
+     def __init__(self, servers, default_timeout=300, key_prefix=None):
+         BaseCache.__init__(self, default_timeout)
+         if isinstance(servers, (list, tuple)):
++            is_cmemcached = is_cmemcache = is_pylibmc = False
+             try:
+-                import cmemcache as memcache
+-                is_cmemcache = True
++                import cmemcached as memcache
++                is_cmemcached = True
+             except ImportError:
+                 try:
+-                    import memcache
+-                    is_cmemcache = False
++                    import pylibmc as memcache
++                    is_pylibmc = True
+                 except ImportError:
+-                    raise RuntimeError('no memcache module found')
++                    try:
++                        import cmemcache as memcache
++                        is_cmemcache = True
++                    except ImportError:
++                        try:
++                            import memcache
++                        except ImportError:
++                            raise RuntimeError('no memcache module found')
+ 
+-            # cmemcache has a bug that debuglog is not defined for the
+-            # client.  Whenever pickle fails you get a weird AttributError.
+             if is_cmemcache:
++                # cmemcache has a bug that debuglog is not defined for the
++                # client.  Whenever pickle fails you get a weird
++                # AttributError.
+                 client = memcache.Client(map(str, servers))
+                 try:
+                     client.debuglog = lambda *a: None
+                 except:
+                     pass
++            elif is_pylibmc or is_cmemcached:
++                client = memcache.Client(servers, False)
+             else:
+                 client = memcache.Client(servers, False, HIGHEST_PROTOCOL)
+         else:
