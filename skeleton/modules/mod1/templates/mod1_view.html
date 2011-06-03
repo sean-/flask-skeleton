@@ -14,6 +14,14 @@
 <p>mod1 demonstrates adding a module to the root prefix. This html file is currently called mod1_view.html but would be more appropriately named index.html.</p>
 
 <p><a href="{{ url_for('list_all') }}">List the contents of the mod1.h2 table.</a><br/><a href="{{ url_for('list_one') }}">List one row in <code>mod1.h2</code>.</a></p>
+
+<h2>Memoized Functions</h2>
+<p>A total of {{unique_values}}</p>
+<ol>
+{% for i in cached_values %}
+<li>{{i}}</li>
+{% endfor %}
+</ol>
 {% endblock %}
 {% block footer %}
 {{ super() }}
