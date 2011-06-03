@@ -1,47 +1,53 @@
-Things still in progress:
+See below for a list of completed items. Things still in progress:
 
 *) Add per-user timezone support
-
 *) Cache a user-object upon login in memcache
-
 *) Beef up the @logged_in decorator so that it:
-
    1) checks memcache for a matching session
    2) Logs a user out if their session has expired (or updates it accordingly)
    3) Populates memcache with a user object upon cache miss
-
 *) Add authorization decorators (maybe)
-
 *) Unit testing framework
-
 *) Migrate to using setup.py instead of providing a fixed requirements.txt
-
 *) Scripting via Flask-Script (both shell setup and cron-like jobs)
-
 *) Localization
-
 *) Services API example (XML, maybe protobuf)
-
+*) Add support for insecure and secure cookies
+*) Logout = kill session in memcache and the database
+*) pgmemcache
 
 
 Things that are demonstrated well enough:
 
-*) ORM Layer and examples
+Database (PostgreSQL):
+	*) ORM Layer and examples
+	*) PostgreSQL schema
+	*) Database ROLEs and permissions
+	*) PostgreSQL pl functions
 
-*) Caching of objects, fragments and views via memcache
+ORM (SQLAlchemy):
+	*) Use of PostgreSQL functions with SQLAlchemy
 
-*) Database schema and permissions
+AAA (Access, Authentication, Authorization):
+	*) Registration
+	*) Login (via pl functions)
+	*) Logout
 
-*) Registration and login/logout
+Caching (memcached):
+	*) Objects
+	*) memoized functions
+	*) Views
 
-*) Session management
+Application:
+	*) Modularized development (filesystem layout)
+	*) Integration with other WSGI Middleware's
+	*) Session management (secure cookie handling)
+	*) Static assets management
 
-*) Use of PostgreSQL functions
+Development:
+	*) Debugging toolbar
+	*) Application profiling
 
-*) Modularized development
-
-*) Jinja templates and Jinja2 template filters
-
-*) Debugging toolbar
-
-*) Static assets management
+Templating (Jinja2):
+	*) Template layout
+	*) Template filters
