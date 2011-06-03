@@ -1,0 +1,27 @@
+{% extends "layout/base.html" %}
+{% block title %}mod2/cached_always{{ super() }}{% endblock %}
+{% block content %}
+<h1>mod2 caching: always cached page</h1>
+<p class="important">This mod2 example is always cached.</p>
+<table>
+  <tr>
+    <td>Page was generated at:</td>
+    <td>{{time|strftime}}</td>
+  </tr>
+  <tr>
+    <td>Page Expires at:</td>
+    <td>{{expires|strftime}}</td>
+  </tr>
+  <tr>
+    <td>JavaScript time is:</td>
+    <td><script type="text/javascript" language="JavaScript"><!--
+var t = new Date();
+document.write('Time is ' + t.getHours() + ':' + t.getMinutes() + ':' + t.getSeconds());
+//--></script></td>
+  </tr>
+</table>
+<a href="{{url_for('cached_always')}}">Click to refresh</a>.</p>
+{% endblock %}
+{% block footer %}
+Can't wait
+{% endblock %}
