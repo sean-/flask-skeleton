@@ -17,37 +17,37 @@ See below for a list of completed items. Things still in progress:
 *) pgmemcache
 
 
-Things that are demonstrated well enough:
+Things that are demonstrated well enough (alpha sorted list):
+
+AAA (Access, Authentication, Authorization):
+	*) Login (via pl functions)
+	*) Logout
+	*) Registration
+
+Application:
+	*) Integration with other WSGI Middleware's
+	*) Modularized development (filesystem layout)
+	*) Session management (secure cookie handling)
+	*) Static assets management
 
 Database (PostgreSQL):
-	*) ORM Layer and examples
-	*) PostgreSQL schema
 	*) Database ROLEs and permissions
+	*) ORM Layer and examples
 	*) PostgreSQL pl functions
+	*) PostgreSQL schema
+
+Caching (memcached):
+	*) Objects
+	*) Views
+	*) memoized functions
+
+Development:
+	*) Application profiling
+	*) Debugging toolbar
 
 ORM (SQLAlchemy):
 	*) Use of PostgreSQL functions with SQLAlchemy
 
-AAA (Access, Authentication, Authorization):
-	*) Registration
-	*) Login (via pl functions)
-	*) Logout
-
-Caching (memcached):
-	*) Objects
-	*) memoized functions
-	*) Views
-
-Application:
-	*) Modularized development (filesystem layout)
-	*) Integration with other WSGI Middleware's
-	*) Session management (secure cookie handling)
-	*) Static assets management
-
-Development:
-	*) Debugging toolbar
-	*) Application profiling
-
 Templating (Jinja2):
-	*) Template layout
 	*) Template filters
+	*) Template layout
