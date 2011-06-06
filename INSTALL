@@ -168,13 +168,13 @@
    #    http://www.postgresql.org/docs/current/static/auto-explain.html
    #
    # 2) A few suggested development tunables for postgresql.conf:
-	# shared_preload_libraries = 'pgcrypto,uuid-ossp'
-	# synchronous_commit = off
-	# log_connections = on
-	# log_disconnections = on
-	# log_duration = on
-	# log_statement = 'all'
-	# timezone = 'UTC'
+        # shared_preload_libraries = 'pgcrypto,uuid-ossp'
+        # synchronous_commit = off
+        # log_connections = on
+        # log_disconnections = on
+        # log_duration = on
+        # log_statement = 'all'
+        # timezone = 'UTC'
    #
    # 3) Learn how to use dblink (and get creative with its use in functions
    #    and views):
