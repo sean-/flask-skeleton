@@ -1,0 +1,55 @@
+See below for a list of completed items. Things still in progress:
+
+*) Add per-user timezone support
+*) Cache a user-object upon login in memcache
+*) Beef up the @logged_in decorator so that it:
+   1) checks memcache for a matching session
+   2) Logs a user out if their session has expired (or updates it accordingly)
+   3) Populates memcache with a user object upon cache miss
+*) Add authorization decorators (maybe)
+*) Unit testing framework
+*) Migrate to using setup.py instead of providing a fixed requirements.txt
+*) Scripting via Flask-Script (both shell setup and cron-like jobs)
+*) Localization
+*) Services API example (XML, maybe protobuf)
+*) Add support for insecure and secure cookies
+*) Logout = kill session in memcache and the database
+*) pgmemcache
+*) Integrate and use Flask-Login
+*) Use .. for imports. Nuke 'has_key' in favor of 'foo in dict'
+
+
+Things that are demonstrated well enough:
+
+Database (PostgreSQL):
+  *) ORM Layer and examples
+  *) PostgreSQL schema
+  *) Database ROLEs and permissions
+  *) PostgreSQL pl functions
+
+ORM (SQLAlchemy):
+  *) Use of PostgreSQL functions with SQLAlchemy
+
+AAA (Access, Authentication, Authorization):
+  *) Registration
+  *) Login (via pl functions)
+  *) Logout
+
+Caching (memcached):
+  *) Objects
+  *) memoized functions
+  *) Views
+
+Application:
+  *) Modularized development (filesystem layout)
+  *) Integration with other WSGI Middleware's
+  *) Session management (secure cookie handling)
+  *) Static assets management
+
+Development:
+  *) Debugging toolbar
+  *) Application profiling
+
+Templating (Jinja2):
+  *) Template layout
+  *) Template filters
