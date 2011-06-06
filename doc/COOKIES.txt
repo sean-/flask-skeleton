@@ -1,8 +1,9 @@
 An explanation of every cookie:
 
 b
-	Randomly generated Browser ID
+  Randomly generated Browser ID
 
 skeleton_session
-	i  = Session ID
-	li = Logged In
+  dsturl = URL to be redirected to after a page completes handling a reque
+  i      = Session ID
+  li     = Logged In
