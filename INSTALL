@@ -116,7 +116,7 @@
    # l2dba 101
 
    # Create the admin ROLE and web user
-   psql template1 pgsql -1f sql/create_roles.sql
+   psql template1 pgsql -1f sql/initialize/100_create_roles.sql
 
    # Create the database. Don't pull a MySQL and use ISO-8895-1
    psql template1 pgsql -c "CREATE DATABASE skeleton OWNER skeleton_admin ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8'"
@@ -128,7 +128,7 @@
    psql skeleton pgsql -1f ~/tmp/uuid-ossp.sql
 
    # Load the schema
-   psql skeleton skeleton_admin -1 -f sql/schema.sql
+   psql skeleton skeleton_admin -1 -f sql/initialize/200_schema.sql
 
    # Load the functions. This loads the functions and changes their
    # permissions. Change DATABASE_PASSWORD_HASH to a random string of bytes
@@ -138,27 +138,29 @@
    # with your webserver password keys.
    pwgen -acn 32 1 > sql/db_password.hash
    psql -At skeleton skeleton -c 'SELECT uuid_generate_v4();' > sql/db_email.uuid
+   chmod 600 sql/db_password.hash sql/db_email.uuid
    sed -e "s#DATABASE_PASSWORD_HASH#`cat sql/db_password.hash`#" \
-       -e "s#DATABASE_EMAIL_UUID#`cat sql/db_email.uuid`#" sql/funcs.sql.in > sql/funcs.sql
-   psql skeleton skeleton_admin -1f sql/funcs.sql
+       -e "s#DATABASE_EMAIL_UUID#`cat sql/db_email.uuid`#" sql/initialize/300_funcs.sql.in \
+       > sql/initialize/300_funcs.sql
+   psql skeleton skeleton_admin -1f sql/initialize/300_funcs.sql
 
    # CREATE TRIGGER commands are run outside of funcs.sql because there is no
    # "CREATE OR REPLACE TRIGGER" syntax.
-   psql skeleton skeleton_admin -1f sql/triggers.sql
+   psql skeleton skeleton_admin -1f sql/initialize/400_triggers.sql
 
    # ALTER FUNCTION ... OWNER TO ... commands must be run by the pgsql user.
-   psql skeleton pgsql -1f sql/fixup_func_owner.sql
+   psql skeleton pgsql -1f sql/initialize/500_fixup_func_owner.sql
 
    # Add aaa and mod1 to the skeleton_www user's default search_path. This
    # only needs to be done when you create a new user.
    psql skeleton pgsql -c 'ALTER ROLE skeleton_www SET search_path = aaa, mod1, public'
 
    # Populate some initial data
-   psql skeleton skeleton_admin -1f sql/initial_data.sql
+   psql skeleton skeleton_admin -1f sql/initialize/800_initial_data.sql
 
    # Setup the GRANTS. Be sure to audit the database permissions after the
    # fact via the psql(1) commands: \dp, \ddp and \dn+
-   psql skeleton skeleton_admin -1 -f sql/perms.sql
+   psql skeleton skeleton_admin -1 -f sql/maintenance/100_perms.sql
 
    # Other misc PostgreSQL tips:
    #
@@ -166,13 +168,13 @@
    #    http://www.postgresql.org/docs/current/static/auto-explain.html
    #
    # 2) A few suggested development tunables for postgresql.conf:
-	# shared_preload_libraries = 'pgcrypto,uuid-ossp'
-	# synchronous_commit = off
-	# log_connections = on
-	# log_disconnections = on
-	# log_duration = on
-	# log_statement = 'all'
-	# timezone = 'UTC'
+        # shared_preload_libraries = 'pgcrypto,uuid-ossp'
+        # synchronous_commit = off
+        # log_connections = on
+        # log_disconnections = on
+        # log_duration = on
+        # log_statement = 'all'
+        # timezone = 'UTC'
    #
    # 3) Learn how to use dblink (and get creative with its use in functions
    #    and views):
@@ -237,7 +239,7 @@
     # Be sure to change your CANONICAL_NAME and CANONICAL_PORT settings once
     # you move in to production.
 
-10) Feel free to re-run the sql/perms.sql script as many times as you'd
+10) Feel free to re-run the sql/maintenance/100_perms.sql script as many times as you'd
     like. \dp, \ddp and \dn+ are your friends.
 
 
