@@ -34,6 +34,9 @@
    nub:
 
    % sudo port install postgresql91-server
+   % sudo mkdir -p /opt/local/var/db/postgresql91/defaultdb
+   % sudo chown postgres:postgres /opt/local/var/db/postgresql91/defaultdb
+   % sudo su postgres -c '/opt/local/lib/postgresql91/bin/initdb -D /opt/local/var/db/postgresql91/defaultdb'
 
    # Not required, but man pages are handy!
    % sudo port install postgresql91-doc

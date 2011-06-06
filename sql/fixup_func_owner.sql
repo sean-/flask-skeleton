@@ -3,5 +3,5 @@
 -- pgsql user (can't be skeleton_admin because skeleton_admin isn't in the
 -- role 'skeleton_shadow').
 ALTER FUNCTION aaa.expire_session(TEXT) OWNER TO skeleton_shadow;
-ALTER FUNCTION aaa.login(TEXT, TEXT, INET, TEXT, INTERVAL) OWNER TO skeleton_shadow;
-ALTER FUNCTION aaa.register(TEXT, TEXT, INET) OWNER TO skeleton_shadow;
+ALTER FUNCTION aaa.login(TEXT, BYTEA, INET, TEXT, INTERVAL) OWNER TO skeleton_shadow;
+ALTER FUNCTION aaa.register(TEXT, BYTEA, INET) OWNER TO skeleton_shadow;
