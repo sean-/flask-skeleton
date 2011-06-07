@@ -1,8 +1,8 @@
 -- Lots of www processes (use pgbouncer!!!)
 CREATE ROLE skeleton_www CONNECTION LIMIT 200 LOGIN;
 
--- Only a few admins
-CREATE ROLE skeleton_admin CONNECTION LIMIT 2 LOGIN;
+-- Only a few DBAs.
+CREATE ROLE skeleton_dba CONNECTION LIMIT 2 LOGIN;
 
 -- There should only ever be one connection as the email user. This limits
 -- the possibility of accidentally sending out duplicate emails.

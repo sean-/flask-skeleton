@@ -1,1 +1,1 @@
-ALTER SCHEMA public OWNER TO skeleton_admin;
+ALTER SCHEMA public OWNER TO skeleton_dba;

@@ -1,7 +1,7 @@
 -- Update the privileges as you see fit.
 -- This script REVOKEs all privs then GRANTs all privs (wrap this in a transaction).
 
--- The skeleton_admin ROLE owns every database object and then GRANTs
+-- The skeleton_dba ROLE owns every database object and then GRANTs
 -- permissions to the ROLEs skeleton_email, skeleton_shadow and skeleton_www.
 
 
