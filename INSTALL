@@ -115,17 +115,15 @@
 
    # l2dba 101
 
-   # Create the admin ROLE and web user
    psql template1 pgsql -1f sql/initialize/100_create_roles.sql
-
-   # Create the database. Don't pull a MySQL and use ISO-8895-1
-   psql template1 pgsql -c "CREATE DATABASE skeleton OWNER skeleton_admin ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8'"
+   psql template1 pgsql -1f sql/initialize/130_create_database.sql
+   psql skeleton pgsql -1f sql/initialize/140_alter_public_schema.sql
 
    # Load the pgcrypto and uuid functions in to skeleton
    cat /opt/local/share/postgresql91/extension/pgcrypto--1.0.sql | sed -e 's#MODULE_PATHNAME#pgcrypto#' > ~/tmp/pgcrypto.sql
    cat /opt/local/share/postgresql91/extension/uuid-ossp--1.0.sql | sed -e 's#MODULE_PATHNAME#uuid-ossp#' > ~/tmp/uuid-ossp.sql
-   psql skeleton pgsql -1f ~/tmp/pgcrypto.sql
-   psql skeleton pgsql -1f ~/tmp/uuid-ossp.sql
+   psql skeleton skeleton_admin -1f ~/tmp/pgcrypto.sql
+   psql skeleton skeleton_admin -1f ~/tmp/uuid-ossp.sql
 
    # Load the schema
    psql skeleton skeleton_admin -1 -f sql/initialize/200_schema.sql
