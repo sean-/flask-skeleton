@@ -244,13 +244,13 @@ BEGIN
         END IF;
 
 	SELECT COUNT(*) INTO STRICT v_current_sessions
-		FROM shadow.aaa_sessions AS s
+		FROM shadow.aaa_session AS s
 		WHERE s.user_id = NEW.user_id AND s.valid = TRUE;
 	IF v_current_sessions >= v_max_sessions THEN
 		-- Need to loop through every session older than the user's
 		-- max allowed number of sessions and expire them.
 		FOR ses IN
-			SELECT * FROM shadow.aaa_sessions
+			SELECT * FROM shadow.aaa_session
 			WHERE s.user_id = NEW.user_id AND s.valid = TRUE
 			ORDER BY s.end_utc DESC OFFSET v_max_sessions - 1
 		LOOP
