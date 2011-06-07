@@ -65,9 +65,8 @@ def load_module_models(app, module):
         print '[MODEL] Loading db model %s' % (model_name)
     model_name = '%s.models' % (model_name)
     try:
-        mod = __import__(model_name)
+        mod = __import__(model_name, globals(), locals(), [], -1)
     except ImportError as e:
-        import re
         if re.match(r'No module named ', e.message) == None:
             print '[MODEL] Unable to load the model for %s: %s' % (model_name, e.message)
         return False
@@ -79,7 +78,7 @@ def register_local_modules(app):
     sys.path.append(os.path.dirname(cur) + '/modules')
     for m in MODULES:
         mod_name = '%s.views' % m['name']
-        views = __import__(mod_name)
+        views = __import__(mod_name, globals(), locals(), [], -1)
         url_prefix = None
         if 'url_prefix' in m:
             url_prefix = m['url_prefix']
