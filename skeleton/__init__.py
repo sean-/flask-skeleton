@@ -60,7 +60,7 @@ def load_config(app):
 
 # Load the local modules
 def load_module_models(app, module):
-    if module.has_key('models') and module['models'] == False:
+    if 'models' in module and module['models'] == False:
         return
 
     model_name = module['name']
@@ -84,7 +84,7 @@ def register_local_modules(app):
         mod_name = '%s.views' % m['name']
         views = __import__(mod_name)
         url_prefix = None
-        if m.has_key('url_prefix'):
+        if 'url_prefix' in m:
             url_prefix = m['url_prefix']
 
         if app.config['DEBUG']:

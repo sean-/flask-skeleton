@@ -13,7 +13,7 @@ from aaa import gen_session_id, module
 def login():
     form = LoginForm()
     # Generate a session ID for them if they don't have one
-    if not session.has_key('i'):
+    if 'i' not in session:
         session['i'] = gen_session_id()
 
     fixup_destination_url('dsturl','post_login_url')
@@ -121,7 +121,7 @@ def logout():
 @module.route('/register', methods=('GET','POST'))
 def register():
     form = RegisterForm()
-    if not session.has_key('i'):
+    if 'i' not in session:
         session['i'] = gen_session_id()
 
     if form.validate_on_submit():
