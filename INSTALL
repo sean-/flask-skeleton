@@ -135,7 +135,7 @@
    # on your database servers and is not present (in any capacity) along side
    # with your webserver password keys.
    pwgen -acn 32 1 > sql/db_password.hash
-   psql -At skeleton skeleton -c 'SELECT uuid_generate_v4();' > sql/db_email.uuid
+   psql -At skeleton skeleton_admin -c 'SELECT uuid_generate_v4();' > sql/db_email.uuid
    chmod 600 sql/db_password.hash sql/db_email.uuid
    sed -e "s#DATABASE_PASSWORD_HASH#`cat sql/db_password.hash`#" \
        -e "s#DATABASE_EMAIL_UUID#`cat sql/db_email.uuid`#" sql/initialize/300_funcs.sql.in \
