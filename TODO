@@ -1,55 +1,58 @@
-See below for a list of completed items. Things still in progress:
+See below for a list of completed items. Things still in progress (roughly in
+order of priority):
 
-*) Add per-user timezone support
-*) Cache a user-object upon login in memcache
-*) Beef up the @logged_in decorator so that it:
-   1) checks memcache for a matching session
-   2) Logs a user out if their session has expired (or updates it accordingly)
-   3) Populates memcache with a user object upon cache miss
-*) Add authorization decorators (maybe)
-*) Unit testing framework
-*) Migrate to using setup.py instead of providing a fixed requirements.txt
-*) Scripting via Flask-Script (both shell setup and cron-like jobs)
-*) Localization
-*) Services API example (XML, maybe protobuf)
-*) Add support for insecure and secure cookies
-*) Logout = kill session in memcache and the database
-*) pgmemcache
-*) Integrate and use Flask-Login
-*) Use .. for imports. Nuke 'has_key' in favor of 'foo in dict'
+ 1) Logout = kill session in memcache and the database
+ 2) Add per-user timezone support
+ 3) Localization (Flask-Babel)
+ 4) Integrate and use Flask-Login
+ 5) Cache a user-object upon login in memcache
+ 6) Beef up the @logged_in decorator so that it:
+    a) checks memcache for a matching session
+    b) Logs a user out if their session has expired (or updates it accordingly)
+    c) Populates memcache with a user object upon cache miss
+ 7) Add authorization decorators (maybe)
+ 8) Unit testing framework
+ 9) Migrate to using setup.py instead of providing a fixed requirements.txt
+10) Scripting via Flask-Script (both shell setup and cron-like jobs)
+11) Services API example (XML, maybe protobuf)
+12) Add support for insecure and secure cookies
+13) pgmemcache
 
 
-Things that are demonstrated well enough:
-
-Database (PostgreSQL):
-  *) ORM Layer and examples
-  *) PostgreSQL schema
-  *) Database ROLEs and permissions
-  *) PostgreSQL pl functions
-
-ORM (SQLAlchemy):
-  *) Use of PostgreSQL functions with SQLAlchemy
+Alpha sorted list of demonstrated components (some better than others):
 
 AAA (Access, Authentication, Authorization):
-  *) Registration
   *) Login (via pl functions)
   *) Logout
-
-Caching (memcached):
-  *) Objects
-  *) memoized functions
-  *) Views
+  *) Registration
 
 Application:
-  *) Modularized development (filesystem layout)
   *) Integration with other WSGI Middleware's
+  *) Modularized development (filesystem layout)
   *) Session management (secure cookie handling)
   *) Static assets management
 
+Database (PostgreSQL):
+  *) Database ROLEs and permissions
+  *) Ordered list of .sql files to execute in order to recreate (and
+     maintain) the database.
+  *) ORM Layer and examples
+  *) PostgreSQL pl functions
+  *) PostgreSQL schema
+
+Caching (memcached):
+  *) memoized functions
+  *) Objects
+  *) Views
+
 Development:
-  *) Debugging toolbar
   *) Application profiling
+  *) Debugging toolbar
+
+ORM (SQLAlchemy):
+  *) Declarative table use
+  *) Use of PostgreSQL functions with SQLAlchemy
 
 Templating (Jinja2):
-  *) Template layout
   *) Template filters
+  *) Template layout
