@@ -6,8 +6,8 @@ from sqlalchemy.types import LargeBinary
 
 from skeleton import db
 from skeleton.lib import fixup_destination_url, local_request
-from aaa.forms import LoginForm, RegisterForm
-from aaa import gen_session_id, module
+from .forms import LoginForm, RegisterForm
+from . import gen_session_id, module
 
 @module.route('/login', methods=('GET','POST'))
 def login():

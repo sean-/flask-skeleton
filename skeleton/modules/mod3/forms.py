@@ -1,4 +1,5 @@
 import re
+
 from flaskext.wtf import Form, Regexp, Required, SubmitField, TextField, URL
 
 class PageAddTagForm(Form):

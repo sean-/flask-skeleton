@@ -1,10 +1,11 @@
 from flask import flash, redirect, render_template, url_for
 
-from mod3 import module
-from mod3.forms import PageAddTagForm, PageSubmitForm
-from mod3.models import Page, PageTags, Tag
 from skeleton import db
 from aaa import login_required
+
+from . import module
+from .forms import PageAddTagForm, PageSubmitForm
+from .models import Page, PageTags, Tag
 
 
 @module.route('/')

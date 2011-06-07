@@ -1,7 +1,4 @@
-import os
-import sys
-
-import json
+import json, os, re, sys
 
 from flask import Flask
 from flaskext.cache import Cache
@@ -10,7 +7,7 @@ from flaskext.sqlalchemy import SQLAlchemy
 from repoze.browserid.middleware import BrowserIdMiddleware
 from werkzeug.contrib.securecookie import SecureCookie
 
-import filters
+from . import filters
 
 __all__ = ['create_app','db']
 
