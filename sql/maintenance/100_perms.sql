@@ -4,9 +4,10 @@
 -- The skeleton_admin ROLE owns every database object and then GRANTs
 -- permissions to the ROLEs skeleton_email, skeleton_shadow and skeleton_www.
 
+
 -- BEGIN: Permissions for the 'public' SCHEMA
-REVOKE ALL ON SCHEMA public FROM PUBLIC, skeleton_www;
-GRANT USAGE ON SCHEMA public TO skeleton_www;
+REVOKE ALL ON SCHEMA public FROM PUBLIC, skeleton_shadow, skeleton_www;
+GRANT USAGE ON SCHEMA public TO skeleton_shadow, skeleton_www;
 
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC, skeleton_www;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO skeleton_www;
@@ -14,9 +15,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO skeleton_
 REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC, skeleton_www;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO skeleton_www;
 
-REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, skeleton_www;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO skeleton_www;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC, skeleton_shadow, skeleton_www;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO skeleton_shadow, skeleton_www;
 -- END: Permissions for the 'public' SCHEMA
+
 
 -- BEGIN: Permissions for the 'mod1' SCHEMA
 REVOKE ALL ON SCHEMA mod1 FROM PUBLIC, skeleton_www;
