@@ -1,46 +1,46 @@
 -- module home's models
 CREATE TABLE public.h1 (
-	id SERIAL,
-	val TEXT,
-	PRIMARY KEY(id)
+  id SERIAL,
+  val TEXT,
+  PRIMARY KEY(id)
 );
 
 CREATE TABLE public.h2 (
-	id SERIAL,
-	val TEXT,
-	val2 TEXT,
-	PRIMARY KEY(id)
+  id SERIAL,
+  val TEXT,
+  val2 TEXT,
+  PRIMARY KEY(id)
 );
 
 -- module mod1's models
 CREATE SCHEMA mod1;
 CREATE TABLE mod1.h1 (
-	id SERIAL,
-	val2 TEXT,
-	PRIMARY KEY(id)
+  id SERIAL,
+  val2 TEXT,
+  PRIMARY KEY(id)
 );
 
 -- module mod3's models
 CREATE TABLE public.page (
-	id SERIAL,
-	url TEXT,
-	PRIMARY KEY(id)
+  id SERIAL,
+  url TEXT,
+  PRIMARY KEY(id)
 );
 CREATE UNIQUE INDEX page_url_udx ON public.page(LOWER(url));
 
 CREATE TABLE public.tag (
-	id SERIAL,
-	name TEXT,
-	PRIMARY KEY(id)
+  id SERIAL,
+  name TEXT,
+  PRIMARY KEY(id)
 );
 CREATE UNIQUE INDEX tag_name_udx ON public.tag(LOWER(name));
 
 CREATE TABLE public.page_tags (
-	page_id INT NOT NULL,
-	tag_id INT NOT NULL,
-	PRIMARY KEY(page_id, tag_id),
-	FOREIGN KEY(page_id) REFERENCES public.page(id),
-	FOREIGN KEY(tag_id) REFERENCES public.tag(id)
+  page_id INT NOT NULL,
+  tag_id INT NOT NULL,
+  PRIMARY KEY(page_id, tag_id),
+  FOREIGN KEY(page_id) REFERENCES public.page(id),
+  FOREIGN KEY(tag_id) REFERENCES public.tag(id)
 );
 CREATE UNIQUE INDEX page_tags_tag_page_id_udx ON public.page_tags (tag_id, page_id);
 
@@ -51,62 +51,62 @@ CREATE SCHEMA email;
 CREATE SCHEMA shadow;
 
 CREATE TABLE shadow.aaa_email (
-	id SERIAL,
-	email TEXT NOT NULL,
-	user_id INT NOT NULL,
-	PRIMARY KEY(id)
+  id SERIAL,
+  email TEXT NOT NULL,
+  user_id INT NOT NULL,
+  PRIMARY KEY(id)
 );
 CREATE UNIQUE INDEX email_email_lower_udx ON shadow.aaa_email(LOWER(email));
 
 CREATE TABLE shadow.aaa_email_confirmation_log (
-	id SERIAL NOT NULL,
-	email_id INT NOT NULL,
-	timestamp_sent TIMESTAMP WITH TIME ZONE NOT NULL,
-	ttl INTERVAL NOT NULL DEFAULT '8 hours'::INTERVAL,
-	confirmation_code UUID NOT NULL,
-	confirmed BOOL NOT NULL DEFAULT FALSE,
-	ip_address INET,
-	timestamp_confirmed TIMESTAMP WITH TIME ZONE,
-	CHECK(confirmed = FALSE OR (confirmed = TRUE AND ip_address IS NOT NULL AND timestamp_confirmed IS NOT NULL)),
-	CHECK(EXTRACT(TIMEZONE FROM timestamp_sent) = 0.0),
-	-- If timestamp_confirmed IS NULL, the CHECK should pass, otherwise
-	-- make sure that we stored the data in UTC.
-	CHECK(timestamp_confirmed IS NULL OR EXTRACT(TIMEZONE FROM timestamp_confirmed) = 0.0),
-	PRIMARY KEY(id),
-	FOREIGN KEY(email_id) REFERENCES shadow.aaa_email(id)
+  id SERIAL NOT NULL,
+  email_id INT NOT NULL,
+  timestamp_sent TIMESTAMP WITH TIME ZONE NOT NULL,
+  ttl INTERVAL NOT NULL DEFAULT '8 hours'::INTERVAL,
+  confirmation_code UUID NOT NULL,
+  confirmed BOOL NOT NULL DEFAULT FALSE,
+  ip_address INET,
+  timestamp_confirmed TIMESTAMP WITH TIME ZONE,
+  CHECK(confirmed = FALSE OR (confirmed = TRUE AND ip_address IS NOT NULL AND timestamp_confirmed IS NOT NULL)),
+  CHECK(EXTRACT(TIMEZONE FROM timestamp_sent) = 0.0),
+  -- If timestamp_confirmed IS NULL, the CHECK should pass, otherwise make
+  -- sure that we stored the data in UTC.
+  CHECK(timestamp_confirmed IS NULL OR EXTRACT(TIMEZONE FROM timestamp_confirmed) = 0.0),
+  PRIMARY KEY(id),
+  FOREIGN KEY(email_id) REFERENCES shadow.aaa_email(id)
 );
 CREATE INDEX aaa_email_confirmation_log_email_idx ON shadow.aaa_email_confirmation_log(email_id);
 CREATE INDEX aaa_email_confirmation_log_confirmation_code_idx ON shadow.aaa_email_confirmation_log(confirmation_code);
 
 CREATE TABLE shadow.aaa_user (
-	id SERIAL,
-	hashpass TEXT NOT NULL,
-	active BOOL NOT NULL,
-	primary_email_id INT NOT NULL,
-	registration_utc TIMESTAMP WITH TIME ZONE NOT NULL,
-	registration_ip INET NOT NULL,
-	max_concurrent_sessions INT NOT NULL DEFAULT 1,
-	PRIMARY KEY(id),
-	FOREIGN KEY(primary_email_id) REFERENCES shadow.aaa_email(id),
-	CHECK(max_concurrent_sessions >= 0),
-	CHECK(EXTRACT(TIMEZONE FROM registration_utc) = 0.0)
+  id SERIAL,
+  hashpass TEXT NOT NULL,
+  active BOOL NOT NULL,
+  primary_email_id INT NOT NULL,
+  registration_utc TIMESTAMP WITH TIME ZONE NOT NULL,
+  registration_ip INET NOT NULL,
+  max_concurrent_sessions INT NOT NULL DEFAULT 1,
+  PRIMARY KEY(id),
+  FOREIGN KEY(primary_email_id) REFERENCES shadow.aaa_email(id),
+  CHECK(max_concurrent_sessions >= 0),
+  CHECK(EXTRACT(TIMEZONE FROM registration_utc) = 0.0)
 );
 CREATE UNIQUE INDEX aaa_user_primary_email_udx ON shadow.aaa_user(primary_email_id);
 ALTER TABLE shadow.aaa_email ADD CONSTRAINT email_user_fk FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id) INITIALLY DEFERRED;
 
 CREATE TABLE shadow.aaa_login_attempts (
-	id SERIAL,
-	user_id INT NOT NULL,
-	login_utc TIMESTAMP WITH TIME ZONE NOT NULL,
-	logout_utc TIMESTAMP WITH TIME ZONE,
-	ip_address INET NOT NULL,
-	success BOOL NOT NULL,
-	notes TEXT,
-	PRIMARY KEY(id),
-	FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
-	CHECK(success OR (NOT success AND notes IS NOT NULL)),
-	CHECK(EXTRACT(TIMEZONE FROM login_utc) = 0.0),
-	CHECK(logout_utc IS NULL OR EXTRACT(TIMEZONE FROM logout_utc) = 0.0)
+  id SERIAL,
+  user_id INT NOT NULL,
+  login_utc TIMESTAMP WITH TIME ZONE NOT NULL,
+  logout_utc TIMESTAMP WITH TIME ZONE,
+  ip_address INET NOT NULL,
+  success BOOL NOT NULL,
+  notes TEXT,
+  PRIMARY KEY(id),
+  FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
+  CHECK(success OR (NOT success AND notes IS NOT NULL)),
+  CHECK(EXTRACT(TIMEZONE FROM login_utc) = 0.0),
+  CHECK(logout_utc IS NULL OR EXTRACT(TIMEZONE FROM logout_utc) = 0.0)
 );
 CREATE INDEX aaa_login_attempts_user_login_idx ON shadow.aaa_login_attempts(user_id, login_utc);
 
@@ -126,19 +126,19 @@ CREATE INDEX aaa_login_attempts_user_login_idx ON shadow.aaa_login_attempts(user
 -- user accesses the site within the last two hours of their session, it will
 -- automatically be renewed for another 4hrs hours).
 CREATE TABLE shadow.aaa_session (
-	session_id TEXT NOT NULL,
-	user_id INT NOT NULL,
-	ip_addr INET NOT NULL,
-	valid BOOL NOT NULL,
-	start_utc TIMESTAMP WITH TIME ZONE NOT NULL,
-	end_utc TIMESTAMP WITH TIME ZONE NOT NULL,
-	renewal_interval INTERVAL NOT NULL DEFAULT '4 hours'::INTERVAL,
-	session_type TEXT,
-	FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
-	CHECK(start_utc < end_utc AND
-		end_utc > NOW() AND
-		renewal_interval > '0'::INTERVAL),
-	CHECK(EXTRACT(TIMEZONE FROM start_utc) = 0.0 AND EXTRACT(TIMEZONE FROM end_utc) = 0.0)
+  session_id TEXT NOT NULL,
+  user_id INT NOT NULL,
+  ip_addr INET NOT NULL,
+  valid BOOL NOT NULL,
+  start_utc TIMESTAMP WITH TIME ZONE NOT NULL,
+  end_utc TIMESTAMP WITH TIME ZONE NOT NULL,
+  renewal_interval INTERVAL NOT NULL DEFAULT '4 hours'::INTERVAL,
+  session_type TEXT,
+  FOREIGN KEY(user_id) REFERENCES shadow.aaa_user(id),
+  CHECK(start_utc < end_utc AND
+        end_utc > NOW() AND
+        renewal_interval > '0'::INTERVAL),
+  CHECK(EXTRACT(TIMEZONE FROM start_utc) = 0.0 AND EXTRACT(TIMEZONE FROM end_utc) = 0.0)
 );
 -- Indexed for obvious reasons
 CREATE UNIQUE INDEX aaa_session_id_valid_udx ON shadow.aaa_session(session_id) WHERE valid = TRUE;
@@ -160,24 +160,24 @@ CREATE INDEX aaa_session_user_id_idx ON shadow.aaa_session(user_id) WHERE valid 
 -- access to this schema, just like the email role does not have access to
 -- the rest of the schemas).
 CREATE VIEW email.email (id, email, user_id) AS
-	SELECT
-		e.id, e.email, e.user_id
-	FROM
-		shadow.aaa_email AS e, shadow.aaa_email_confirmation_log AS ecl
-	WHERE
-		e.id = ecl.email_id AND ecl.confirmed = TRUE;
+  SELECT
+    e.id, e.email, e.user_id
+  FROM
+    shadow.aaa_email AS e, shadow.aaa_email_confirmation_log AS ecl
+  WHERE
+    e.id = ecl.email_id AND ecl.confirmed = TRUE;
 
 -- Only show active users. Easy low hanging fruit to prevent accidents.
 CREATE VIEW email."user" (id, primary_email_id) AS
-	SELECT id, primary_email_id
-	FROM shadow.aaa_user
-	WHERE active = TRUE;
+  SELECT id, primary_email_id
+  FROM shadow.aaa_user
+  WHERE active = TRUE;
 
 -- Note this view is created from a JOIN of two VIEWs. Again, in the email
 -- schema because no one web process should have access to see every email
 -- address in the system.
 CREATE VIEW email.user_emails (user_id, email_id, email, user_primary_email_id) AS
-	SELECT u.id, e.id, e.email, u.primary_email_id
-	FROM email.email AS e, email."user" AS u
-	WHERE e.user_id = u.id;
+  SELECT u.id, e.id, e.email, u.primary_email_id
+  FROM email.email AS e, email."user" AS u
+  WHERE e.user_id = u.id;
 -- END: aaa's schema
