@@ -14,6 +14,9 @@
     $ less ~/.cshrc     # _Always_ review changes to your shell config
     $ exec /bin/tcsh    # Start using tcsh(1)
     % chsh /bin/tcsh    # Change your default shell once you feel comfortable
+    % mv .enter.tcsh.dist .enter.tcsh; mv .enter.local.tcsh.dist .enter.local.tcsh
+    % ${EDITOR} .enter.tcsh .enter.local.tcsh
+    % cd $PWD           # Run this after you finish installing PostgreSQL
 
 
 0b) Download and install python 2.7.1 (NOTE: python 3.X is a no-go with
@@ -30,16 +33,18 @@
 
 
 0d) Download and install PostgreSQL. Similar to the above, but since this is
-   a database and not a random library, you're on your own for not being a
-   nub:
+    a database and not a random library, you're on your own for not being a
+    nub:
 
-   % sudo port install postgresql91-server
-   % sudo mkdir -p /opt/local/var/db/postgresql91/defaultdb
-   % sudo chown postgres:postgres /opt/local/var/db/postgresql91/defaultdb
-   % sudo su postgres -c '/opt/local/lib/postgresql91/bin/initdb -D /opt/local/var/db/postgresql91/defaultdb'
+    % sudo port install postgresql91-server
+    % sudo mkdir -p /opt/local/var/db/postgresql91/defaultdb
+    % sudo chown postgres:postgres /opt/local/var/db/postgresql91/defaultdb
 
-   # Not required, but man pages are handy!
-   % sudo port install postgresql91-doc
+    # Run this in a different Terminal window
+    % sudo su postgres -c '/opt/local/lib/postgresql91/bin/initdb -D /opt/local/var/db/postgresql91/defaultdb'
+
+    # Not required, but man pages are handy!
+    % sudo port install postgresql91-doc
 
 
 1) Rename from 'skeleton' to 'myapp':
@@ -55,9 +60,12 @@
 
 2) Start the database:
 
+   # This should be set by your .enter.local.tcsh file.
+   #setenv PGUSER_ROOT pgsql
+
    # MacPorts installed version of PostgreSQL 9.1, I run this in a different
    # terminal when developing so I can see what's going on.
-   sudo su - pgsql -c '/opt/local/lib/postgresql91/bin/postgres -D /opt/local/var/db/postgresql91/defaultdb'
+   sudo su - ${PGUSER_ROOT} -c '/opt/local/lib/postgresql91/bin/postgres -D /opt/local/var/db/postgresql91/defaultdb'
 
 
 3) Create a virualenv for the skeleton:
@@ -76,21 +84,18 @@
    source bin/activate.csh
 
 
-5) Pull in the required packages. This step is a bit goofy due to PostgreSQL's
-   pg_config being hidden away out of the normal path.
+5) Pull in the required packages.
 
-   # Tweak your path to where pg_config(1) is hidden
-   setenv PATH /opt/local/lib/postgresql91/bin/:${PATH}
-
-   # And tweak the build environment slightly for python-libmemcached and
-   # M2Crypto
+   # Tweak the build environment slightly for python-libmemcached and
+   # M2Crypto.
    setenv CPPFLAGS '-I/opt/local/include -I/opt/local/include/openssl'
 
    # Break the installation down in to two steps: download and install (if
    # something fails, you don't want to start over again from scratch). ~/tmp
    # is created by .cshrc.
-   pip install -U --download-cache=~/tmp -I -r requirements.txt --no-install
-   pip install -U --download-cache=~/tmp -I -r requirements.txt --no-download
+   mkdir ~/tmp/pip
+   pip install -U --download-cache=~/tmp/pip -I -r requirements.txt --no-install
+   pip install -U --download-cache=~/tmp/pip -I -r requirements.txt --no-download
 
    # Make sure everything is there (or newer):
    pip freeze | sort > requirements.txt
@@ -101,6 +106,7 @@
      # For now, Werkzeug doesn't support python-libmemcached, but it can by
      # applying the following patch to your install (versions 0.6.2 & 0.7.0):
      % patch -d lib/python2.7/site-packages/ -p0 < patches/werkzeug::contrib::cache_452e8402d056.patch-0.6.2
+
 
 6) Setup debugging:
 
@@ -113,20 +119,23 @@
 7) Initialize the database (these steps should be moved in to a script for
    easy unit testing):
 
-   # l2dba 101
+   # l2dba 101.
 
-   psql template1 pgsql -1f sql/initialize/100_create_roles.sql
-   psql template1 pgsql -1f sql/initialize/130_create_database.sql
-   psql skeleton pgsql -1f sql/initialize/140_alter_public_schema.sql
+   # Environment variables that should be set by your .enter.local.tcsh:
+   # PGUSER_DBA, PGUSER_ROOT, PGUSER and PGDATABASE.
+
+   psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/100_create_roles.sql
+   psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/130_create_database.sql
+   psql -U ${PGUSER_ROOT} -1f sql/initialize/140_alter_public_schema.sql
 
    # Load the pgcrypto and uuid functions in to skeleton
    cat /opt/local/share/postgresql91/extension/pgcrypto--1.0.sql | sed -e 's#MODULE_PATHNAME#pgcrypto#' > ~/tmp/pgcrypto.sql
    cat /opt/local/share/postgresql91/extension/uuid-ossp--1.0.sql | sed -e 's#MODULE_PATHNAME#uuid-ossp#' > ~/tmp/uuid-ossp.sql
-   psql skeleton skeleton_dba -1f ~/tmp/pgcrypto.sql
-   psql skeleton skeleton_dba -1f ~/tmp/uuid-ossp.sql
+   psql -U ${PGUSER_DBA} -1f ~/tmp/pgcrypto.sql
+   psql -U ${PGUSER_DBA} -1f ~/tmp/uuid-ossp.sql
 
    # Load the schema
-   psql skeleton skeleton_dba -1 -f sql/initialize/200_schema.sql
+   psql -U ${PGUSER_DBA} -1 -f sql/initialize/200_schema.sql
 
    # Load the functions. This loads the functions and changes their
    # permissions. Change DATABASE_PASSWORD_HASH to a random string of bytes
@@ -135,30 +144,30 @@
    # on your database servers and is not present (in any capacity) along side
    # with your webserver password keys.
    pwgen -acn 32 1 > sql/db_password.hash
-   psql -At skeleton skeleton_dba -c 'SELECT uuid_generate_v4();' > sql/db_email.uuid
+   psql -At -U ${PGUSER_DBA} -c 'SELECT uuid_generate_v4();' > sql/db_email.uuid
    chmod 600 sql/db_password.hash sql/db_email.uuid
    sed -e "s#DATABASE_PASSWORD_HASH#`cat sql/db_password.hash`#" \
-       -e "s#DATABASE_EMAIL_UUID#`cat sql/db_email.uuid`#" sql/initialize/300_funcs.sql.in \
-       > sql/initialize/300_funcs.sql
-   psql skeleton skeleton_dba -1f sql/initialize/300_funcs.sql
+       -e "s#DATABASE_EMAIL_UUID#`cat sql/db_email.uuid`#" \
+       sql/initialize/300_funcs.sql.in > sql/initialize/300_funcs.sql
+   psql -U ${PGUSER_DBA} -1f sql/initialize/300_funcs.sql
 
    # CREATE TRIGGER commands are run outside of funcs.sql because there is no
    # "CREATE OR REPLACE TRIGGER" syntax.
-   psql skeleton skeleton_dba -1f sql/initialize/400_triggers.sql
+   psql -U ${PGUSER_DBA} -1f sql/initialize/400_triggers.sql
 
-   # ALTER FUNCTION ... OWNER TO ... commands must be run by the pgsql user.
-   psql skeleton pgsql -1f sql/initialize/500_fixup_func_owner.sql
+   # ALTER FUNCTION ... OWNER TO ... commands must be run by the -U ${PGUSER_ROOT} user.
+   psql -U ${PGUSER_ROOT} -1f sql/initialize/500_fixup_func_owner.sql
 
    # Add aaa and mod1 to the skeleton_www user's default search_path. This
    # only needs to be done when you create a new user.
-   psql skeleton pgsql -c 'ALTER ROLE skeleton_www SET search_path = aaa, mod1, public'
+   psql -U ${PGUSER_ROOT} -c "ALTER ROLE skeleton_www IN DATABASE ${PGDATABASE} SET search_path = aaa, mod1, public"
 
    # Populate some initial data
-   psql skeleton skeleton_dba -1f sql/initialize/800_initial_data.sql
+   psql -U ${PGUSER_DBA} -1f sql/initialize/800_initial_data.sql
 
    # Setup the GRANTS. Be sure to audit the database permissions after the
    # fact via the psql(1) commands: \dp, \ddp and \dn+
-   psql skeleton skeleton_dba -1 -f sql/maintenance/100_perms.sql
+   psql -U ${PGUSER_DBA} -1 -f sql/maintenance/100_perms.sql
 
    # Other misc PostgreSQL tips:
    #
@@ -224,7 +233,6 @@
     #    from the beginning.
 
 
-
 9) In production, you will need to combine all of your static assets
     together and probably have them served by nginx. Something like:
 
@@ -236,6 +244,7 @@
 
     # Be sure to change your CANONICAL_NAME and CANONICAL_PORT settings once
     # you move in to production.
+
 
 10) Feel free to re-run the sql/maintenance/100_perms.sql script as many times as you'd
     like. \dp, \ddp and \dn+ are your friends.
