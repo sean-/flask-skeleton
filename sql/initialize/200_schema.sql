@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 CREATE SCHEMA mod1;
 

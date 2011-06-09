@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 INSERT INTO public.timezone(name) VALUES ('Africa/Abidjan');
 INSERT INTO public.timezone(name) VALUES ('Africa/Accra');
 INSERT INTO public.timezone(name) VALUES ('Africa/Addis_Ababa');

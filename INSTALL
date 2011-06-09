@@ -123,7 +123,7 @@
 
    # Environment variables that should be set by your .enter.local.tcsh:
    # PGUSER_RW, PGUSER and PGDATABASE.
-   setenv PGUSER_DBA skeleton_rw_dba
+   setenv PGUSER_DBA skeleton_root
    setenv PGUSER_ROOT pgsql
 
    # Create the base roles

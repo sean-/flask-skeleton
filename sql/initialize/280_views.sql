@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 -- A view to SELECT user data. Explicitly don't include the primary_email_id
 -- or registration_ip. Users must always present their own email address and

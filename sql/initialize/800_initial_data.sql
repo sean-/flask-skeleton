@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 INSERT INTO public.h1 (val) VALUES ('h1-id1');
 INSERT INTO public.h2 (val2) VALUES ('h2-id1'), ('h2-id2');
 INSERT INTO public.page(url) VALUES ('http://127.0.0.1:5000/foo'), ('http://127.0.0.1:5000/bar');

@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 -- Create a "normal" schema that inlines all of the normal SQL features in a
 -- single file. For more complex schemas, see the remaining .sql files that

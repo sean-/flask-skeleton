@@ -1,10 +1,25 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 -- Update the privileges as you see fit.
 -- This script REVOKEs all privs then GRANTs all privs (wrap this in a transaction).
 
--- The skeleton_dba ROLE owns every database object and then GRANTs
+-- The skeleton_root ROLE owns every database object and then GRANTs
 -- permissions to the ROLEs skeleton_email, skeleton_shadow and skeleton_www.
+-- Individual DBAs log in as their own DBA account, which belongs to the
+-- skeleton_dba GROUP. The skeleton_dba GROUP gives visibility, but has
+-- severely restricted EXECUTE or "write" privs. Only users in the
+-- skeleton_root GROUP have "write" privs. When you want to affect change on
+-- the database, you have to change to your skeleton_rw_${USER} account. This
+-- is deliberate.
+
+-- Pro tip: Assign object privs to GROUPs and then add user ROLEs to GROUPs.
+/*
+-- CREATE GROUP skeleton_www;
+-- ALTER GROUP skeleton_www ADD USER skeleton_flask;
+-- CREATE SCHEMA my_app;
+GRANT USAGE ON SCHEMA my_app TO GROUP skeleton_www;
+GRANT SELECT ON ALL TABLES IN SCHEMA my_app TO GROUP skeleton_www;
+*/
 
 
 -- BEGIN: Permissions for the 'public' SCHEMA

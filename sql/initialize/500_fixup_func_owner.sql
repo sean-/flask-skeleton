@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 -- Change the owner of these functions to skeleton_shadow because SECURITY
 -- DEFINER is a set attribute for these functions. This must be run as the

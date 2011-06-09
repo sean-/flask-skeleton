@@ -1,4 +1,4 @@
--- env PGDATABASES=skeleton PGUSER=skeleton_dba
+-- env PGDATABASES=skeleton PGUSER=skeleton_root
 
 CREATE UNIQUE INDEX user_id_udx
   ON aaa.user(id);

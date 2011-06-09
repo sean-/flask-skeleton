@@ -1,4 +1,4 @@
--- env PGDATABASE=skeleton PGUSER=skeleton_dba
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
 
 ALTER TABLE aaa.user ADD CONSTRAINT id_fk
   FOREIGN KEY(id) REFERENCES shadow.aaa_user(id);

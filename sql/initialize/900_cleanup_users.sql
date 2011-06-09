@@ -1,5 +1,6 @@
 -- env PGDATABASE=skeleton PGUSER=pgsql
 
--- The dba role should not be able to log in, only users. The dba role owns
--- objects, that's it.
-ALTER ROLE skeleton_dba NOLOGIN CONNECTION LIMIT -1;
+-- The skeleton_root role should not be able to log in, only users. The root
+-- role owns objects and gives "sudo" like access to users with a
+-- skeleton_rw_${USER} account.
+ALTER ROLE skeleton_root NOLOGIN CONNECTION LIMIT -1;
