@@ -125,6 +125,8 @@
    # PGUSER_DBA, PGUSER_ROOT, PGUSER and PGDATABASE.
 
    psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/100_create_roles.sql
+   psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE skeleton_${PGUSER} CONNECTION LIMIT 2 LOGIN;"
+   psql -d template1 -U ${PGUSER_ROOT} -c "ALTER GROUP skeleton_dba ADD USER ${PGUSER};"
    psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/130_create_database.sql
    psql -U ${PGUSER_ROOT} -1f sql/initialize/140_alter_public_schema.sql
 
@@ -168,6 +170,9 @@
    # Setup the GRANTS. Be sure to audit the database permissions after the
    # fact via the psql(1) commands: \dp, \ddp and \dn+
    psql -U ${PGUSER_DBA} -1 -f sql/maintenance/100_perms.sql
+
+   # Neuter the DBA user and use your own personal DBA account.
+   psql -U ${PGUSER_ROOT} -1 -f sql/initialize/900_cleanup_users.sql
 
    # Other misc PostgreSQL tips:
    #
