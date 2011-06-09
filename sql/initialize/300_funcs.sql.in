@@ -1,3 +1,5 @@
+-- env PGDATABASE=skeleton PGUSER=skeleton_dba
+
 -- Create a convenience function to SHA256 hash some data. Putting this
 -- function in the public schema since it doesn't actually change the state
 -- of any tables.

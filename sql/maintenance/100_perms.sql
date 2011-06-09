@@ -1,3 +1,5 @@
+-- env PGDATABASE=skeleton PGUSER=skeleton_dba
+
 -- Update the privileges as you see fit.
 -- This script REVOKEs all privs then GRANTs all privs (wrap this in a transaction).
 

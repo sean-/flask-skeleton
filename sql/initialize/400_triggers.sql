@@ -1,3 +1,4 @@
+-- env PGDATABASE=skeleton PGUSER=skeleton_dba
 CREATE TRIGGER aaa_session_expire_excess_trg BEFORE INSERT ON shadow.aaa_session
   FOR EACH ROW EXECUTE PROCEDURE shadow.aaa_session_expire_excess_trg();
 

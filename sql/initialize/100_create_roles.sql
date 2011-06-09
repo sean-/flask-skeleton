@@ -1,3 +1,5 @@
+-- env PGDATABASE=template1 PGUSER=pgsql
+
 -- Lots of www processes (use pgbouncer!!!)
 CREATE ROLE skeleton_www CONNECTION LIMIT 200 LOGIN;
 
