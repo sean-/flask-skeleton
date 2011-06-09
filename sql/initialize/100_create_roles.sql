@@ -11,4 +11,4 @@ CREATE ROLE skeleton_email CONNECTION LIMIT 1 LOGIN;
 -- Note that the skeleton_shadow user can't log in. This is very much
 -- intended. The skeleton_shadow user is the user that various functions
 -- execute with (think "setuid" privs for certain pl/pgsql functions).
-CREATE ROLE skeleton_shadow;
+CREATE ROLE skeleton_shadow NOLOGIN;
