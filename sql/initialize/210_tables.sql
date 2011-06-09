@@ -69,10 +69,8 @@ CREATE TABLE shadow.aaa_login_attempts (
   ip_address INET NOT NULL,
   success BOOL NOT NULL,
   notes TEXT,
-  PRIMARY KEY(id),
   CHECK(success OR (NOT success AND notes IS NOT NULL)),
-  CHECK(EXTRACT(TIMEZONE FROM login_utc) = 0.0),
-  CHECK(logout_utc IS NULL OR EXTRACT(TIMEZONE FROM logout_utc) = 0.0)
+  CHECK(EXTRACT(TIMEZONE FROM login_utc) = 0.0)
 );
 
 
