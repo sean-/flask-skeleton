@@ -122,11 +122,23 @@
    # l2dba 101.
 
    # Environment variables that should be set by your .enter.local.tcsh:
-   # PGUSER_DBA, PGUSER_ROOT, PGUSER and PGDATABASE.
+   # PGUSER_RW, PGUSER and PGDATABASE.
+   setenv PGUSER_DBA skeleton_rw_dba
+   setenv PGUSER_ROOT pgsql
 
+   # Create the base roles
    psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/100_create_roles.sql
-   psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE skeleton_${PGUSER} CONNECTION LIMIT 2 LOGIN;"
+
+   # Create your user roles (use two, one for read-only and the other for
+   # read-write activities)
+   psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE ${PGUSER} CONNECTION LIMIT 2 LOGIN;"
+   psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE ${PGUSER_RW} CONNECTION LIMIT 1 LOGIN;"
+
+   # Add the ROLEs to their respective DBA ROLE/GROUPs
    psql -d template1 -U ${PGUSER_ROOT} -c "ALTER GROUP skeleton_dba ADD USER ${PGUSER};"
+   psql -d template1 -U ${PGUSER_ROOT} -c "ALTER GROUP skeleton_rw_dba ADD USER ${PGUSER_RW};"
+
+   # Create the rest of the DB objects
    psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/130_create_database.sql
    psql -U ${PGUSER_ROOT} -1f sql/initialize/140_alter_public_schema.sql
 

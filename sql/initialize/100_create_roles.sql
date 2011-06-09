@@ -3,13 +3,20 @@
 -- Lots of www processes (use pgbouncer!!!)
 CREATE ROLE skeleton_www CONNECTION LIMIT 200 LOGIN;
 
--- Only one DBA login for now. Once the app goes in to maintenance mode, only
--- use your per-user login. At the end of this procedure the skeleton_dba
--- ROLE is prevented from logging in.
-CREATE ROLE skeleton_dba CONNECTION LIMIT 1 LOGIN;
+-- Allow only one connection from rw_dba user for now. Once the app goes in
+-- to maintenance mode, only use your per-user login. At the end of this
+-- procedure the skeleton_rw_dba ROLE is prevented from logging in. The
+-- skeleton_dba ROLE is a read-only GROUP. If a user needs read/write access,
+-- they need to use their respective read-write account. Once setup, it's
+-- easy to maintain the permissions since you grant permissions to the
+-- GROUPs, not to individuals. "Only you can prevent forrest fires."
+CREATE ROLE skeleton_dba NOLOGIN;
+CREATE ROLE skeleton_rw_dba CONNECTION LIMIT 1 LOGIN;
 
 -- There should only ever be one connection as the email user. This limits
--- the possibility of accidentally sending out duplicate emails.
+-- the possibility of accidentally sending out duplicate emails. The paranoid
+-- can use this as a way of preventing duplicate jobs from running and
+-- accidentally emailing out duplicates.
 CREATE ROLE skeleton_email CONNECTION LIMIT 1 LOGIN;
 
 -- Note that the skeleton_shadow user can't log in. This is very much
