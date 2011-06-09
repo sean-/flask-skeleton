@@ -18,139 +18,191 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 -- The return result (BOOL), the field the message applies to (TEXT), and
 -- optional relevant information (TEXT). Example:
 --
--- SELECT result, "column", message FROM aaa.login(email := 'user@example.com', password := '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co', ip_address := '11.22.33.44', session_id := 'user session id from flask', renewal_interval := '60 minutes'::INTERVAL) AS (result BOOL, "column" TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, renewal_interval INTERVAL) RETURNS RECORD AS $aaa_login$
+-- SELECT result, "column", message FROM aaa.login(email :=
+-- 'user@example.com', password :=
+-- '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co',
+-- ip_address := '11.22.33.44', session_id := 'user session id from flask',
+-- session_length := '60 minutes'::INTERVAL, secure := TRUE) AS (result BOOL, "column"
+-- TEXT, message TEXT);
+CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, session_length INTERVAL, secure BOOL) RETURNS RECORD AS $aaa_login$
 DECLARE
-	ret			RECORD;
-	a_email			ALIAS FOR email;
-	a_password		ALIAS FOR password;
-	a_ip_address		ALIAS FOR ip_address;
-	a_session_id		ALIAS FOR session_id;
-	a_renewal_interval	ALIAS FOR renewal_interval;
-	v_email_id		shadow.aaa_email.id%TYPE;
-	v_email_confirmed	shadow.aaa_email_confirmation_log.confirmed%TYPE;
-	v_user_id		shadow.aaa_user.id%TYPE;
-	v_user_active		shadow.aaa_user.active%TYPE;
-	v_pw_from_user		shadow.aaa_user.hashpass%TYPE;
-	v_pw_from_db		shadow.aaa_user.hashpass%TYPE;
-	v_login_attempts	INT NOT NULL DEFAULT 99;
-	MAX_LOGIN_ATTEMPTS	INT NOT NULL DEFAULT 3;
-	LOGIN_INTERVAL		INTERVAL NOT NULL DEFAULT '20 minutes'::INTERVAL;
+  ret                 RECORD;
+  a_email             ALIAS FOR email;
+  a_password          ALIAS FOR password;
+  a_ip_address        ALIAS FOR ip_address;
+  a_session_id        ALIAS FOR session_id;
+  a_session_length    ALIAS FOR session_length;
+  a_secure            ALIAS FOR secure;
+  v_email_id          shadow.aaa_email.id%TYPE;
+  v_email_confirmed   shadow.aaa_email_confirmation_log.confirmed%TYPE;
+  v_ip_mask           shadow.aaa_session.ip_mask%TYPE;
+  v_user_id           shadow.aaa_user.id%TYPE;
+  v_user_active       shadow.aaa_user.active%TYPE;
+  v_pw_from_user      shadow.aaa_user.hashpass%TYPE;
+  v_pw_from_db        shadow.aaa_user.hashpass%TYPE;
+  v_ipv4_mask         shadow.aaa_user.default_ipv4_mask%TYPE;
+  v_ipv6_mask         shadow.aaa_user.default_ipv6_mask%TYPE;
+  v_login_attempts    INT NOT NULL DEFAULT 99;
+  MAX_LOGIN_ATTEMPTS  INT NOT NULL DEFAULT 3;
+  LOGIN_INTERVAL      INTERVAL NOT NULL DEFAULT '20 minutes'::INTERVAL;
 BEGIN
-	-- Check that the email is valid.
-	SELECT e.id, e.user_id INTO v_email_id, v_user_id FROM shadow.aaa_email AS e WHERE e.email = a_email;
-	IF NOT found THEN
-		-- Prevent someone from dictionary attacking the database
-		-- with possibly known email addresses. No point in logging
-		-- a failed login attempt with an unknown email address.
-		ret := (FALSE, 'vague'::TEXT, 'Unknown email address'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Check that the email is valid.
+  SELECT e.id, e.user_id INTO v_email_id, v_user_id FROM shadow.aaa_email AS e WHERE e.email = a_email;
+  IF NOT found THEN
+    -- Prevent someone from dictionary attacking the database with possibly
+    -- known email addresses. No point in logging a failed login attempt with
+    -- an unknown email address.
+    ret := (FALSE, 'vague'::TEXT, 'Unknown email address'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- Check that the email address is confirmed. Since login is a
-	-- crucial part of any application, perform this check independently
-	-- of the above email check that way a user knows that they need to
-	-- have their email address confirmed. "Login failed" is less than
-	-- descriptive and very unhelpful or friendly.
+  -- Check that the email address is confirmed. Since login is a crucial part
+  -- of any application, perform this check independently of the above email
+  -- check that way a user knows that they need to have their email address
+  -- confirmed. "Login failed" is less than descriptive and very unhelpful or
+  -- friendly.
 
-	SELECT ecl.confirmed INTO v_email_confirmed FROM shadow.aaa_email_confirmation_log AS ecl
-	WHERE ecl.email_id = v_email_id
-	ORDER BY ecl.timestamp_sent DESC LIMIT 1;
-	IF NOT found THEN
-		-- Raising an exception here because this means that
-		-- something was INSERTed in to the database
-		-- improperly. Normally I'd just RETURN FALSE, but given all
-		-- registration activities are handled via a highly
-		-- controlled FUNCTIONs (e.g. aaa.register()), RAISEing an
-		-- EXCEPTION is more appropriate.
-		RAISE EXCEPTION 'No email confirmation information for ecl.email_id %', v_email_id;
-	END IF;
+  SELECT ecl.confirmed INTO v_email_confirmed FROM shadow.aaa_email_confirmation_log AS ecl
+  WHERE ecl.email_id = v_email_id
+  ORDER BY ecl.timestamp_sent DESC LIMIT 1;
+  IF NOT found THEN
+    -- Raising an exception here because this means that something was
+    -- INSERTed in to the database improperly. Normally I'd just RETURN
+    -- FALSE, but given all registration activities are handled via a highly
+    -- controlled FUNCTIONs (e.g. aaa.register()), RAISEing an EXCEPTION is
+    -- more appropriate.
+    RAISE EXCEPTION 'No email confirmation information for ecl.email_id %', v_email_id;
+  END IF;
 
-	-- Hash the user's password using a constant hash. Password inputs in
-	-- to the database should be hashed by the web process before we
-	-- attempt to hash the user's password here. Reason: If the hash'ed
-	-- password in the database is just sha256('mypass') then the
-	-- resulting hash is bruteforce-able or can be resolved via static
-	-- dictionaries. If, however, the input to this function was already
-	-- hashed on the webserver by: sha256('%s%s' % (webserver_login_key,
-	-- user_pass)), the stored contents is not vulnerable to a host of
-	-- attacks. This is not perfect, but it is significantly better than
-	-- having a password hashed a single time. i.e. sha256('mypass') ==
-	-- bad.  sha256(sha256('mypass'), webserver_key) == infinitely better
-	v_pw_from_user := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
-	SELECT u.hashpass, u.active INTO v_pw_from_db, v_user_active
-		FROM shadow.aaa_user AS u WHERE u.id = v_user_id;
-	IF NOT FOUND THEN
-		-- This check is required, despite having FOREIGN KEYS in
-		-- place (some FOREIGN KEY constraints aren't executed until
-		-- COMMIT time, which means aaa.login() could possibly return
-		-- inconsistant information to the user).
-		RAISE EXCEPTION 'No user record for user_id %', v_user_id;
-	END IF;
+  -- Hash the user's password using a constant hash. Password inputs in to
+  -- the database should be hashed by the web process before we attempt to
+  -- hash the user's password here. Reason: If the hash'ed password in the
+  -- database is just sha256('mypass') then the resulting hash is
+  -- bruteforce-able or can be resolved via static dictionaries. If, however,
+  -- the input to this function was already hashed on the webserver by:
+  -- sha256('%s%s' % (webserver_login_key, user_pass)), the stored contents
+  -- is not vulnerable to a host of attacks. This is not perfect, but it is
+  -- significantly better than having a password hashed a single
+  -- time. i.e. sha256('mypass') == bad.  sha256(sha256('mypass'),
+  -- webserver_key) == infinitely better
+  v_pw_from_user := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
+  SELECT u.hashpass, u.active, u.default_ipv4_mask, u.default_ipv6_mask
+      INTO v_pw_from_db, v_user_active, v_ipv4_mask, v_ipv6_mask
+    FROM shadow.aaa_user AS u WHERE u.id = v_user_id;
+  IF NOT FOUND THEN
+    -- This check is required, despite having FOREIGN KEYS in place (some
+    -- FOREIGN KEY constraints aren't executed until COMMIT time, which means
+    -- aaa.login() could possibly return inconsistant information to the
+    -- user).
+    RAISE EXCEPTION 'No user record for user_id %', v_user_id;
+  END IF;
 
-	-- Access checks first: Is the user account active?
-	IF NOT v_user_active THEN
-		-- RETURN FALSE instead of being vague so that someone knows
-		-- their account has been deactivated (for whatever reason).
-		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Account not active');
-		ret := (FALSE, 'email'::TEXT, 'Account not active'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Access checks first: Is the user account active?
+  IF NOT v_user_active THEN
+    -- RETURN FALSE instead of being vague so that someone knows their
+    -- account has been deactivated (for whatever reason).
+    INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Account not active');
+    ret := (FALSE, 'email'::TEXT, 'Account not active'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- Access check: Throttle the number of login attempts in the
-	-- configured interval *before* actually checking to see if the
-	-- password matches.
-	SELECT COUNT(*) INTO v_login_attempts
-		FROM shadow.aaa_login_attempts AS ala
-		WHERE
-			TRUE = TRUE
-			AND ala.user_id = v_user_id
-			AND ala.login_utc >= (NOW() - LOGIN_INTERVAL)
-			AND ala.success = FALSE;
-	IF v_login_attempts > MAX_LOGIN_ATTEMPTS THEN
-		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Too many login attempts');
-		ret := (FALSE, 'email'::TEXT, 'Too many failed login attempts. Account locked.'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Access check: Throttle the number of login attempts in the configured
+  -- interval *before* actually checking to see if the password matches.
+  SELECT COUNT(*) INTO v_login_attempts
+    FROM shadow.aaa_login_attempts AS ala
+    WHERE
+      TRUE = TRUE
+      AND ala.user_id = v_user_id
+      AND ala.login_utc >= (NOW() - LOGIN_INTERVAL)
+      AND ala.success = FALSE;
+  IF v_login_attempts > MAX_LOGIN_ATTEMPTS THEN
+    INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Too many login attempts');
+    ret := (FALSE, 'email'::TEXT, 'Too many failed login attempts. Account locked.'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- Authentication checks second: Do passwords match?
-	IF v_pw_from_db != v_pw_from_user THEN
-		-- Passwords don't match? Oof. Suck on a vague message you
-		-- hacker douche bag you ... or innocent person who forgot or
-		-- typo'ed their password.
-		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Password incorrect');
-		ret := (FALSE, 'vague'::TEXT, 'Password incorrect'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Authentication checks second: Do passwords match?
+  IF v_pw_from_db != v_pw_from_user THEN
+    -- Passwords don't match? Oof. Suck on a vague message you hacker douche
+    -- bag you ... or innocent person who forgot or typo'ed their password.
+    INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, FALSE, 'Password incorrect');
+    ret := (FALSE, 'vague'::TEXT, 'Password incorrect'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- Check to make sure they've confirmed their email address.
-	IF NOT v_email_confirmed THEN
-		-- Successfully log a valid login attempt for users who have
-		-- entered the right password, but haven't confirmed their
-		-- email address yet. The above throttling check relies on
-		-- failed login attempts so frustrated and impatient users
-		-- who can't read will still get in once they calm down and
-		-- RTFS (Read The Fucking Screen) and check their email.
-		INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, TRUE, 'Email Address Unconfirmed');
-		ret := (FALSE, 'email'::TEXT, 'Email Address Unconfirmed'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Check to make sure they've confirmed their email address.
+  IF NOT v_email_confirmed THEN
+    -- Successfully log a valid login attempt for users who have entered the
+    -- right password, but haven't confirmed their email address yet. The
+    -- above throttling check relies on failed login attempts so frustrated
+    -- and impatient users who can't read will still get in once they calm
+    -- down and RTFS (Read The Fucking Screen) and check their email.
+    INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success, notes) VALUES (v_user_id, NOW(), a_ip_address, TRUE, 'Email Address Unconfirmed');
+    ret := (FALSE, 'email'::TEXT, 'Email Address Unconfirmed'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- At this point, the user should be granted access and a session
-	-- should be created. The INSERT triggers on shadow.aaa_session will
-	-- invalidate other sessions automatically.
-	INSERT INTO shadow.aaa_session (user_id, session_id, ip_addr, valid, start_utc, end_utc, renewal_interval) VALUES (v_user_id, a_session_id, a_ip_address, TRUE, NOW(), NOW() + a_renewal_interval, a_renewal_interval);
+  -- Before we grant the user access, let's setup the right IP mask for their
+  -- session.
+  IF family(a_ip_address) = 4 THEN
+    v_ip_mask := set_masklen(a_ip_address, v_ipv4_mask);
+  ELSIF family(a_ip_address) = 6 THEN
+    v_ip_mask := set_masklen(a_ip_address, v_ipv6_mask);
+  ELSE
+    RAISE EXCEPTION 'Unsupported IP family for IP %', a_ip_address;
+  END IF;
 
-	-- Record the success
-	INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success) VALUES (v_user_id, NOW(), a_ip_address, TRUE);
+  -- At this point, the user should be granted access and a session should be
+  -- created. The INSERT triggers on shadow.aaa_session will invalidate other
+  -- sessions automatically.
+  INSERT INTO shadow.aaa_session
+      (user_id, ip_mask, secure, valid, start_utc, end_utc, session_id)
+    VALUES
+      (v_user_id, v_ip_mask, a_secure, TRUE, NOW(), NOW() + a_session_length, a_session_id);
 
-	ret := (TRUE, NULL::TEXT, NULL::TEXT);
-	RETURN ret;
+  -- Record the success
+  INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success) VALUES (v_user_id, NOW(), a_ip_address, TRUE);
+
+  ret := (TRUE, NULL::TEXT, NULL::TEXT);
+  RETURN ret;
 END;
 $aaa_login$
-	LANGUAGE plpgsql
-	RETURNS NULL ON NULL INPUT
-	SECURITY DEFINER;
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
+-- Create a function to log a user out of the site and kill their
+-- sessions. SECURITY DEFINER is set on the function so that the skeleton_www
+-- user can execute the FUNCTION without giving the skeleton_www user access
+-- to the shadow schema. Think of SECURITY DEFINER like the "setuid" bit for
+-- *NIX programs. The return value can be split in to three columns:
+--
+-- The return result (BOOL), the field the message applies to (TEXT), and
+-- optional relevant information (TEXT). Example:
+--
+-- SELECT result, "column", message FROM aaa.logout(session_id := 'user
+-- session id from flask') AS (result BOOL, "column" TEXT, message TEXT);
+CREATE OR REPLACE FUNCTION aaa.logout(session_id TEXT)
+  RETURNS RECORD AS $aaa_logout$
+DECLARE
+  ret                 RECORD;
+  a_session_id        ALIAS FOR session_id;
+BEGIN
+  -- Close the session by settinv valid to false and letting the UPDATE
+  -- trigger do the rest.
+  IF aaa.expire_session(a_session_id) THEN
+    ret := (TRUE, NULL::TEXT, NULL::TEXT);
+  ELSE
+    ret := (FALSE, NULL::TEXT, NULL::TEXT);
+  END IF;
+
+  RETURN ret;
+END;
+$aaa_logout$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 -- Create a function to register a new user with the site. SECURITY DEFINER
@@ -162,118 +214,123 @@ $aaa_login$
 -- The return result (BOOL), the field the message applies to (TEXT), and
 -- optional relevant information (TEXT). Example:
 --
--- SELECT result, "column", message FROM aaa.register(email := 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44') AS (result BOOL, "column" TEXT, message TEXT);
-
+-- SELECT result, "column", message FROM aaa.register(email :=
+-- 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44')
+-- AS (result BOOL, "column" TEXT, message TEXT);
 CREATE OR REPLACE FUNCTION aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD AS $$
 DECLARE
-	ret RECORD;
-	a_email      ALIAS FOR email;
-	a_password   ALIAS FOR password;
-	a_ip_address ALIAS FOR ip_address;
-	v_email_conf_code shadow.aaa_email_confirmation_log.confirmation_code%TYPE;
-	v_email_id        shadow.aaa_email.id%TYPE;
-	v_emailconflog_id shadow.aaa_email_confirmation_log.id%TYPE;
-	v_user_id         shadow.aaa_user.id%TYPE;
-	v_hashed_password shadow.aaa_user.hashpass%TYPE;
+  ret RECORD;
+  a_email      ALIAS FOR email;
+  a_password   ALIAS FOR password;
+  a_ip_address ALIAS FOR ip_address;
+  v_email_conf_code shadow.aaa_email_confirmation_log.confirmation_code%TYPE;
+  v_email_id        shadow.aaa_email.id%TYPE;
+  v_emailconflog_id shadow.aaa_email_confirmation_log.id%TYPE;
+  v_user_id         shadow.aaa_user.id%TYPE;
+  v_hashed_password shadow.aaa_user.hashpass%TYPE;
 BEGIN
-	-- Check that the email isn't already in use
-	SELECT e.id INTO v_email_id FROM shadow.aaa_email AS e WHERE e.email = a_email LIMIT 1;
-	IF found THEN
-		-- Should log that this IP address attempted a failed registration
-		ret := (FALSE, 'email'::TEXT, 'Email address already in use'::TEXT);
-		RETURN ret;
-	END IF;
+  -- Check that the email isn't already in use
+  SELECT e.id INTO v_email_id FROM shadow.aaa_email AS e WHERE e.email = a_email LIMIT 1;
+  IF found THEN
+    -- Should log that this IP address attempted a failed registration
+    ret := (FALSE, 'email'::TEXT, 'Email address already in use'::TEXT);
+    RETURN ret;
+  END IF;
 
-	-- Hash the user's password.
-	IF LENGTH(a_password) != 32 THEN
-		RAISE EXCEPTION 'Password was not previously hashed by the webserver';
-	END IF;
-	-- Hash the password a second time using a database hash
-	v_hashed_password := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
+  -- Hash the user's password.
+  IF LENGTH(a_password) != 32 THEN
+    RAISE EXCEPTION 'Password was not previously hashed by the webserver';
+  END IF;
+  -- Hash the password a second time using a database hash
+  v_hashed_password := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
 
-	-- Create a new user and email. Create the aaa_email record because
-	-- it is smaller and we need to perform an UPDATE to resolve the
-	-- circular FOREIGN KEYS.
-	INSERT INTO shadow.aaa_email (email, user_id) VALUES (a_email, 0) RETURNING id INTO STRICT v_email_id;
-	INSERT INTO shadow.aaa_user (hashpass, primary_email_id, registration_utc, registration_ip, active) VALUES (v_hashed_password, v_email_id, NOW(), a_ip_address, TRUE) RETURNING id INTO STRICT v_user_id;
+  -- Create a new user and email. Create the aaa_email record because it is
+  -- smaller and we need to perform an UPDATE to resolve the circular FOREIGN
+  -- KEYS.
+  INSERT INTO shadow.aaa_email (email, user_id) VALUES (a_email, 0) RETURNING id INTO STRICT v_email_id;
+  INSERT INTO shadow.aaa_user (hashpass, primary_email_id, registration_utc, registration_ip, active) VALUES (v_hashed_password, v_email_id, NOW(), a_ip_address, TRUE) RETURNING id INTO STRICT v_user_id;
 
-	-- Use DATABASE_EMAIL_UUID to secure email confirmation codes. As
-	-- long as DATABASE_EMAIL_UUID is not leaked, every email address
-	-- should have a unique confirmation code that can be recreated based
-	-- on the row id. This could have been done via a TRIGGER but I
-	-- wanted to show case a different method of pre-fetching the value
-	-- out of a SEQUENCE.
-	v_emailconflog_id := NEXTVAL('shadow.aaa_email_confirmation_log_id_seq'::regclass);
-	INSERT INTO shadow.aaa_email_confirmation_log (id, email_id, timestamp_sent, confirmation_code, ip_address) VALUES (v_emailconflog_id, v_email_id, NOW() AT TIME ZONE 'UTC', public.uuid_generate_v5('DATABASE_EMAIL_UUID'::UUID, v_emailconflog_id::TEXT), a_ip_address) RETURNING confirmation_code INTO STRICT v_email_conf_code;
-	UPDATE shadow.aaa_email SET user_id = v_user_id WHERE id = v_email_id;
-	ret := (TRUE, 'confirmation code'::TEXT, v_email_conf_code::TEXT);
-	RETURN ret;
+  -- Use DATABASE_EMAIL_UUID to secure email confirmation codes. As long as
+  -- DATABASE_EMAIL_UUID is not leaked, every email address should have a
+  -- unique confirmation code that can be recreated based on the row id. This
+  -- could have been done via a TRIGGER but I wanted to show case a different
+  -- method of pre-fetching the value out of a SEQUENCE.
+  v_emailconflog_id := NEXTVAL('shadow.aaa_email_confirmation_log_id_seq'::regclass);
+  INSERT INTO shadow.aaa_email_confirmation_log (id, email_id, timestamp_sent, confirmation_code, ip_address) VALUES (v_emailconflog_id, v_email_id, NOW() AT TIME ZONE 'UTC', public.uuid_generate_v5('DATABASE_EMAIL_UUID'::UUID, v_emailconflog_id::TEXT), a_ip_address) RETURNING confirmation_code INTO STRICT v_email_conf_code;
+  UPDATE shadow.aaa_email SET user_id = v_user_id WHERE id = v_email_id;
+  ret := (TRUE, 'confirmation code'::TEXT, v_email_conf_code::TEXT);
+  RETURN ret;
 END;
 $$
-	LANGUAGE plpgsql
-	RETURNS NULL ON NULL INPUT
-	SECURITY DEFINER;
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 CREATE OR REPLACE FUNCTION aaa.expire_session(session_id TEXT) RETURNS BOOL AS $ses_expire$
 DECLARE
-	a_session_id ALIAS FOR session_id;
+  a_session_id ALIAS FOR session_id;
 BEGIN
-	UPDATE shadow.aaa_session SET valid = FALSE WHERE session_id = a_session_id;
-	RETURN FOUND;
+  UPDATE shadow.aaa_session AS s SET valid = FALSE WHERE s.session_id = a_session_id;
+  RETURN FOUND;
 END;
 $ses_expire$
-	LANGUAGE plpgsql
-        RETURNS NULL ON NULL INPUT
-        SECURITY DEFINER;
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 CREATE OR REPLACE FUNCTION shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER AS $ses_expire$
 DECLARE
-	ses			RECORD;
-	v_max_sessions		shadow.aaa_user.max_concurrent_sessions%TYPE;
-	v_current_sessions	INT;
+  ses                 RECORD;
+  v_max_sessions      shadow.aaa_user.max_concurrent_sessions%TYPE;
+  v_current_sessions  INT;
 BEGIN
-	-- Mark old sessions invalid if the user's number of concurrent
-	-- sessions has been reached.
-	SELECT u.max_concurrent_sessions INTO STRICT v_max_sessions
-		FROM shadow.aaa_user AS u
-		WHERE u.id = NEW.user_id;
-	IF NOT FOUND THEN
-            RAISE EXCEPTION 'user_id not found %', NEW.user_id;
-        END IF;
+  -- Mark old sessions invalid if the user's number of concurrent sessions
+  -- has been reached.
+  SELECT u.max_concurrent_sessions INTO STRICT v_max_sessions
+    FROM shadow.aaa_user AS u
+    WHERE u.id = NEW.user_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'user_id not found %', NEW.user_id;
+  END IF;
 
-	SELECT COUNT(*) INTO STRICT v_current_sessions
-		FROM shadow.aaa_session AS s
-		WHERE s.user_id = NEW.user_id AND s.valid = TRUE;
-	IF v_current_sessions >= v_max_sessions THEN
-		-- Need to loop through every session older than the user's
-		-- max allowed number of sessions and expire them.
-		FOR ses IN
-			SELECT * FROM shadow.aaa_session
-			WHERE s.user_id = NEW.user_id AND s.valid = TRUE
-			ORDER BY s.end_utc DESC OFFSET v_max_sessions - 1
-		LOOP
-			EXECUTE aaa.expire_session(s.session_id);
-		END LOOP;
-	END IF;
+  SELECT COUNT(*) INTO STRICT v_current_sessions
+    FROM shadow.aaa_session AS s
+    WHERE s.user_id = NEW.user_id AND s.valid = TRUE;
+  IF v_current_sessions >= v_max_sessions THEN
+    -- Need to loop through every session older than the user's max allowed
+    -- number of sessions and expire them.
+    FOR ses IN
+      SELECT * FROM shadow.aaa_session AS s
+      WHERE s.user_id = NEW.user_id AND s.valid = TRUE
+      ORDER BY s.end_utc DESC OFFSET v_max_sessions - 1
+    LOOP
+      PERFORM aaa.expire_session(ses.session_id);
+    END LOOP;
+  END IF;
 
-	-- Ok, can continue now that any excess sessions have been expired
-	RETURN NEW;
+  -- Ok, can continue now that any excess sessions have been expired
+  RETURN NEW;
 END;
 $ses_expire$ LANGUAGE plpgsql;
 
 
 
 -- Upon expiring a session, make sure the session's end isn't at some point
--- in the future.
+-- in the future. By the same token, setting valid to FALSE automatically
+-- sets end_utc to NOW().
 CREATE OR REPLACE FUNCTION shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER AS $ses_fixup_end_utc$
 BEGIN
-	IF OLD.end_utc > NOW() THEN
-		NEW.end_utc := NOW();
-	END IF;
+  IF NEW.end_utc > OLD.end_utc THEN
+    RAISE EXCEPTION 'Unable to push end_utc in to the future, it can only go backwards';
+  END IF;
 
-	RETURN NEW;
+  IF OLD.valid = TRUE AND NEW.valid = FALSE THEN
+    NEW.end_utc := NOW();
+  END IF;
+
+  RETURN NEW;
 END;
 $ses_fixup_end_utc$
-	LANGUAGE plpgsql;
+  LANGUAGE plpgsql;

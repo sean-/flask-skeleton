@@ -48,14 +48,14 @@ def login():
 
         ses = db.session
         result = ses.execute(
-            # SELECT result, "column", message FROM aaa.login(email := 'user@example.com', password := '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co', ip_address := '11.22.33.44', session_id := 'user session id from flask', renewal_interval := '60 minutes'::INTERVAL) AS (result BOOL, "column" TEXT, message TEXT);
-            text("SELECT ret, col, msg FROM aaa.login(:email, :pw, :ip, :sid, :idle) AS (ret BOOL, col TEXT, msg TEXT)",
+            text("SELECT ret, col, msg FROM aaa.login(:email, :pw, :ip, :sid, :idle, :secure) AS (ret BOOL, col TEXT, msg TEXT)",
                  bindparams=[
                     bindparam('email', form.email.data),
                     bindparam('pw', shapass, type_=LargeBinary),
                     bindparam('ip', remote_addr),
                     bindparam('sid', new_sess_id),
-                    bindparam('idle',idle)]))
+                    bindparam('idle',idle),
+                    bindparam('secure', request.is_secure)]))
 
         # Explicitly commit regardless of the remaining logic. The database
         # did the right thing behind the closed doors of aaa.login() and we
@@ -98,18 +98,34 @@ def login():
 
 @module.route('/logout')
 def logout():
+    # Is there a destination post-logout?
     dsturl = None
     if request.referrer and local_request(request.referrer):
         dsturl = request.referrer
     else:
         dsturl = None
 
-    already_logged_out = True if 'li' not in session else False
+    # End the session in the database
+    already_logged_out = False
+    if 'li' in session:
+        ses = db.session
+        result = ses.execute(
+            text("SELECT ret, col, msg FROM aaa.logout(:sid) AS (ret BOOL, col TEXT, msg TEXT)",
+                 bindparams=[bindparam('sid', session['i'])]))
+        ses.commit()
+        # For now, don't test the result of the logout call. Regardless of
+        # whether or not a user provides us with a valid session ID from the
+        # wrong IP address, terminate the session. Shoot first, ask questions
+        # later (i.e. why was a BadUser in posession of GoodUser's session
+        # ID?!)
+    else:
+        already_logged_out = True
 
     # Nuke every key in the session
     for k in session.keys():
         session.pop(k)
 
+    # Set a flash message after we nuke the keys in session
     if already_logged_out:
         flash('Session cleared for logged out user')
     else:
