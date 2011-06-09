@@ -138,6 +138,9 @@
 
    # Load the schema
    psql -U ${PGUSER_DBA} -1 -f sql/initialize/200_schema.sql
+   psql -U ${PGUSER_DBA} -1 -f sql/initialize/205_integrated_definitions.sql
+   psql -U ${PGUSER_DBA} -1 -f sql/initialize/210_tables.sql
+   psql -U ${PGUSER_DBA} -1 -f sql/initialize/280_views.sql
 
    # Load the functions. This loads the functions and changes their
    # permissions. Change DATABASE_PASSWORD_HASH to a random string of bytes
