@@ -22,22 +22,26 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 -- 'user@example.com', password :=
 -- '\xbd\x18\xee\x85\x9f\x19Bl\x1e\x9dE\xdc\x10\xe2NH\x1b\x94\xe5n\x01C\x98\xe5AQ\x05\xb2\xa7,\x1co',
 -- ip_address := '11.22.33.44', session_id := 'user session id from flask',
--- renewal_interval := '60 minutes'::INTERVAL) AS (result BOOL, "column"
+-- session_length := '60 minutes'::INTERVAL, secure := TRUE) AS (result BOOL, "column"
 -- TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, renewal_interval INTERVAL) RETURNS RECORD AS $aaa_login$
+CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, session_length INTERVAL, secure BOOL) RETURNS RECORD AS $aaa_login$
 DECLARE
   ret                 RECORD;
   a_email             ALIAS FOR email;
   a_password          ALIAS FOR password;
   a_ip_address        ALIAS FOR ip_address;
   a_session_id        ALIAS FOR session_id;
-  a_renewal_interval  ALIAS FOR renewal_interval;
+  a_session_length    ALIAS FOR session_length;
+  a_secure            ALIAS FOR secure;
   v_email_id          shadow.aaa_email.id%TYPE;
   v_email_confirmed   shadow.aaa_email_confirmation_log.confirmed%TYPE;
+  v_ip_mask           shadow.aaa_session.ip_mask%TYPE;
   v_user_id           shadow.aaa_user.id%TYPE;
   v_user_active       shadow.aaa_user.active%TYPE;
   v_pw_from_user      shadow.aaa_user.hashpass%TYPE;
   v_pw_from_db        shadow.aaa_user.hashpass%TYPE;
+  v_ipv4_mask         shadow.aaa_user.default_ipv4_mask%TYPE;
+  v_ipv6_mask         shadow.aaa_user.default_ipv6_mask%TYPE;
   v_login_attempts    INT NOT NULL DEFAULT 99;
   MAX_LOGIN_ATTEMPTS  INT NOT NULL DEFAULT 3;
   LOGIN_INTERVAL      INTERVAL NOT NULL DEFAULT '20 minutes'::INTERVAL;
@@ -82,7 +86,8 @@ BEGIN
   -- time. i.e. sha256('mypass') == bad.  sha256(sha256('mypass'),
   -- webserver_key) == infinitely better
   v_pw_from_user := public.sha256(a_password || 'DATABASE_PASSWORD_HASH');
-  SELECT u.hashpass, u.active INTO v_pw_from_db, v_user_active
+  SELECT u.hashpass, u.active, u.default_ipv4_mask, u.default_ipv6_mask
+      INTO v_pw_from_db, v_user_active, v_ipv4_mask, v_ipv6_mask
     FROM shadow.aaa_user AS u WHERE u.id = v_user_id;
   IF NOT FOUND THEN
     -- This check is required, despite having FOREIGN KEYS in place (some
@@ -137,10 +142,23 @@ BEGIN
     RETURN ret;
   END IF;
 
+  -- Before we grant the user access, let's setup the right IP mask for their
+  -- session.
+  IF family(a_ip_address) = 4 THEN
+    v_ip_mask := set_masklen(a_ip_address, v_ipv4_mask);
+  ELSIF family(a_ip_address) = 6 THEN
+    v_ip_mask := set_masklen(a_ip_address, v_ipv6_mask);
+  ELSE
+    RAISE EXCEPTION 'Unsupported IP family for IP %', a_ip_address;
+  END IF;
+
   -- At this point, the user should be granted access and a session should be
   -- created. The INSERT triggers on shadow.aaa_session will invalidate other
   -- sessions automatically.
-  INSERT INTO shadow.aaa_session (user_id, session_id, ip_addr, valid, start_utc, end_utc, renewal_interval) VALUES (v_user_id, a_session_id, a_ip_address, TRUE, NOW(), NOW() + a_renewal_interval, a_renewal_interval);
+  INSERT INTO shadow.aaa_session
+      (user_id, ip_mask, secure, valid, start_utc, end_utc, session_id)
+    VALUES
+      (v_user_id, v_ip_mask, a_secure, TRUE, NOW(), NOW() + a_session_length, a_session_id);
 
   -- Record the success
   INSERT INTO shadow.aaa_login_attempts (user_id, login_utc, ip_address, success) VALUES (v_user_id, NOW(), a_ip_address, TRUE);
@@ -199,7 +217,6 @@ $aaa_logout$
 -- SELECT result, "column", message FROM aaa.register(email :=
 -- 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44')
 -- AS (result BOOL, "column" TEXT, message TEXT);
-
 CREATE OR REPLACE FUNCTION aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD AS $$
 DECLARE
   ret RECORD;
@@ -254,13 +271,13 @@ CREATE OR REPLACE FUNCTION aaa.expire_session(session_id TEXT) RETURNS BOOL AS $
 DECLARE
   a_session_id ALIAS FOR session_id;
 BEGIN
-  UPDATE shadow.aaa_session SET valid = FALSE WHERE session_id = a_session_id;
+  UPDATE shadow.aaa_session AS s SET valid = FALSE WHERE s.session_id = a_session_id;
   RETURN FOUND;
 END;
 $ses_expire$
   LANGUAGE plpgsql
-        RETURNS NULL ON NULL INPUT
-        SECURITY DEFINER;
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 CREATE OR REPLACE FUNCTION shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER AS $ses_expire$
@@ -275,8 +292,8 @@ BEGIN
     FROM shadow.aaa_user AS u
     WHERE u.id = NEW.user_id;
   IF NOT FOUND THEN
-            RAISE EXCEPTION 'user_id not found %', NEW.user_id;
-        END IF;
+    RAISE EXCEPTION 'user_id not found %', NEW.user_id;
+  END IF;
 
   SELECT COUNT(*) INTO STRICT v_current_sessions
     FROM shadow.aaa_session AS s
@@ -285,11 +302,11 @@ BEGIN
     -- Need to loop through every session older than the user's max allowed
     -- number of sessions and expire them.
     FOR ses IN
-      SELECT * FROM shadow.aaa_session
+      SELECT * FROM shadow.aaa_session AS s
       WHERE s.user_id = NEW.user_id AND s.valid = TRUE
       ORDER BY s.end_utc DESC OFFSET v_max_sessions - 1
     LOOP
-      EXECUTE aaa.expire_session(s.session_id);
+      PERFORM aaa.expire_session(ses.session_id);
     END LOOP;
   END IF;
 
@@ -301,10 +318,15 @@ $ses_expire$ LANGUAGE plpgsql;
 
 
 -- Upon expiring a session, make sure the session's end isn't at some point
--- in the future.
+-- in the future. By the same token, setting valid to FALSE automatically
+-- sets end_utc to NOW().
 CREATE OR REPLACE FUNCTION shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER AS $ses_fixup_end_utc$
 BEGIN
-  IF OLD.end_utc > NOW() THEN
+  IF NEW.end_utc > OLD.end_utc THEN
+    RAISE EXCEPTION 'Unable to push end_utc in to the future, it can only go backwards';
+  END IF;
+
+  IF OLD.valid = TRUE AND NEW.valid = FALSE THEN
     NEW.end_utc := NOW();
   END IF;
 

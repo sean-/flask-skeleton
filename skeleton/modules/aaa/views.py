@@ -48,13 +48,14 @@ def login():
 
         ses = db.session
         result = ses.execute(
-            text("SELECT ret, col, msg FROM aaa.login(:email, :pw, :ip, :sid, :idle) AS (ret BOOL, col TEXT, msg TEXT)",
+            text("SELECT ret, col, msg FROM aaa.login(:email, :pw, :ip, :sid, :idle, :secure) AS (ret BOOL, col TEXT, msg TEXT)",
                  bindparams=[
                     bindparam('email', form.email.data),
                     bindparam('pw', shapass, type_=LargeBinary),
                     bindparam('ip', remote_addr),
                     bindparam('sid', new_sess_id),
-                    bindparam('idle',idle)]))
+                    bindparam('idle',idle),
+                    bindparam('secure', request.is_secure)]))
 
         # Explicitly commit regardless of the remaining logic. The database
         # did the right thing behind the closed doors of aaa.login() and we
