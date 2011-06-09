@@ -44,6 +44,13 @@ CREATE TABLE public.page_tags (
 );
 CREATE UNIQUE INDEX page_tags_tag_page_id_udx ON public.page_tags (tag_id, page_id);
 
+CREATE TABLE public.timezone (
+  id SERIAL,
+  name TEXT NOT NULL,
+  PRIMARY KEY(id)
+);
+CREATE UNIQUE INDEX timezone_name_lower_udx ON public.timezone(LOWER(name));
+
 
 -- BEGIN: aaa's schema
 CREATE SCHEMA aaa;
@@ -82,6 +89,7 @@ CREATE TABLE shadow.aaa_user (
   id SERIAL,
   hashpass TEXT NOT NULL,
   active BOOL NOT NULL,
+  timezone_id INT,
   primary_email_id INT NOT NULL,
   registration_utc TIMESTAMP WITH TIME ZONE NOT NULL,
   registration_ip INET NOT NULL,
@@ -90,6 +98,7 @@ CREATE TABLE shadow.aaa_user (
   default_ipv6_mask INT NOT NULL DEFAULT 128,
   PRIMARY KEY(id),
   FOREIGN KEY(primary_email_id) REFERENCES shadow.aaa_email(id),
+  FOREIGN KEY(timezone_id) REFERENCES public.timezone(id),
   CHECK(max_concurrent_sessions >= 0),
   CHECK(EXTRACT(TIMEZONE FROM registration_utc) = 0.0)
 );
