@@ -97,18 +97,34 @@ def login():
 
 @module.route('/logout')
 def logout():
+    # Is there a destination post-logout?
     dsturl = None
     if request.referrer and local_request(request.referrer):
         dsturl = request.referrer
     else:
         dsturl = None
 
-    already_logged_out = True if 'li' not in session else False
+    # End the session in the database
+    already_logged_out = False
+    if 'li' in session:
+        ses = db.session
+        result = ses.execute(
+            text("SELECT ret, col, msg FROM aaa.logout(:sid) AS (ret BOOL, col TEXT, msg TEXT)",
+                 bindparams=[bindparam('sid', session['i'])]))
+        ses.commit()
+        # For now, don't test the result of the logout call. Regardless of
+        # whether or not a user provides us with a valid session ID from the
+        # wrong IP address, terminate the session. Shoot first, ask questions
+        # later (i.e. why was a BadUser in posession of GoodUser's session
+        # ID?!)
+    else:
+        already_logged_out = True
 
     # Nuke every key in the session
     for k in session.keys():
         session.pop(k)
 
+    # Set a flash message after we nuke the keys in session
     if already_logged_out:
         flash('Session cleared for logged out user')
     else:

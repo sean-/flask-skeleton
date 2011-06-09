@@ -154,6 +154,39 @@ $aaa_login$
   SECURITY DEFINER;
 
 
+-- Create a function to log a user out of the site and kill their
+-- sessions. SECURITY DEFINER is set on the function so that the skeleton_www
+-- user can execute the FUNCTION without giving the skeleton_www user access
+-- to the shadow schema. Think of SECURITY DEFINER like the "setuid" bit for
+-- *NIX programs. The return value can be split in to three columns:
+--
+-- The return result (BOOL), the field the message applies to (TEXT), and
+-- optional relevant information (TEXT). Example:
+--
+-- SELECT result, "column", message FROM aaa.logout(session_id := 'user
+-- session id from flask') AS (result BOOL, "column" TEXT, message TEXT);
+CREATE OR REPLACE FUNCTION aaa.logout(session_id TEXT)
+  RETURNS RECORD AS $aaa_logout$
+DECLARE
+  ret                 RECORD;
+  a_session_id        ALIAS FOR session_id;
+BEGIN
+  -- Close the session by settinv valid to false and letting the UPDATE
+  -- trigger do the rest.
+  IF aaa.expire_session(a_session_id) THEN
+    ret := (TRUE, NULL::TEXT, NULL::TEXT);
+  ELSE
+    ret := (FALSE, NULL::TEXT, NULL::TEXT);
+  END IF;
+
+  RETURN ret;
+END;
+$aaa_logout$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
 -- Create a function to register a new user with the site. SECURITY DEFINER
 -- is set on the function so that the skeleton_www user can execute the
 -- FUNCTION without giving the skeleton_www user access to the shadow
