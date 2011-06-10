@@ -1,5 +1,6 @@
-from flaskext.wtf import BooleanField, Email, EqualTo, Form, Length, \
-    Required, PasswordField, RadioField, SubmitField, TextField, ValidationError
+from flaskext.wtf import BooleanField, Email, EqualTo, Form, IntegerField, \
+    Length, NumberRange, Optional, Required, PasswordField, QuerySelectField, \
+    RadioField, SubmitField, TextField, ValidationError
 
 class LoginForm(Form):
     email = TextField('Email', validators=[Required(), Email()])
@@ -24,4 +25,5 @@ class RegisterForm(Form):
     ])
     confirm = PasswordField('Repeat Password')
     accept_tos = BooleanField('I accept the TOS', validators = [Required()])
+    timezone = QuerySelectField(get_label='name', allow_blank=True)
     submit = SubmitField('Register')

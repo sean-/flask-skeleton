@@ -1,13 +1,16 @@
 import hashlib
 
-from flask import current_app, flash, g, redirect, render_template, request, session, url_for
+from flask import current_app, flash, g, redirect, render_template, \
+    request, session, url_for
 from sqlalchemy.sql.expression import bindparam, text
 from sqlalchemy.types import LargeBinary
 
 from skeleton import db
 from skeleton.lib import fixup_destination_url, local_request
-from .forms import LoginForm, RegisterForm
-from . import gen_session_id, module
+from .forms import LoginForm, ProfileForm, RegisterForm
+from . import fresh_login_required, gen_session_id, module
+from skeleton.models import Timezone
+
 
 @module.route('/login', methods=('GET','POST'))
 def login():
@@ -140,6 +143,7 @@ def register():
     if 'i' not in session:
         session['i'] = gen_session_id()
 
+    form.timezone.query = Timezone.query.order_by(Timezone.name)
     if form.validate_on_submit():
         # Form validates, execute the registration pl function
 
@@ -160,6 +164,12 @@ def register():
                     bindparam('ip', remote_addr)]))
         row = result.first()
         if row[0] == True:
+            # Update the user's timezone if they submitted a timezone
+            if form.timezone.data:
+                res = ses.execute(
+                    text("INSERT INTO aaa.user_info (user_id, timezone_id) VALUES (user_id_get(:email), :tz)",
+                         bindparams=[bindparam('email', form.email.data),
+                                     bindparam('tz', form.timezone.data.id),]))
             ses.commit()
             flash('Thanks for registering! Please check your %s email account to confirm your email address.' % (form.email.data))
             return redirect(url_for('aaa.login'))
