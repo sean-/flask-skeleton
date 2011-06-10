@@ -1,9 +1,27 @@
 See below for a list of completed items. Things still in progress (roughly in
 order of priority):
 
-*) Logout = kill session in memcache
+*) Cache a user-object upon login in memcache
+*) Begin using the g request global where possible
+*) Scripting via Flask-Script (both shell setup and cron-like jobs)
+*) Change the User model so that specific attributes call the appropriate SQL
+   to update the parameters in the database. Most of User is populated via a
+   VIEW.
+*) Support gettext()
+*) Add a file that handles all of the neuances of integrating Babel and accounts
+*) Unit testing framework
+*) Migrate to using setup.py instead of providing a fixed requirements.txt
+*) Services API example (XML, maybe protobuf)
+*) pgmemcache
+*) Example of sending mail
+*) Remaining session tedium:
+   *) Beef up the @logged_in decorator so that it:
+      a) checks memcache for a matching session
+      b) Logs a user out if their session has expired (or updates it accordingly)
+      c) Populates memcache with a user object upon cache miss
    *) Loop detection for clients that have cookies disabled
    *) Add no cookie page
+   *) Add support for insecure and secure cookies
    *) Reissue cookie id's older than 24hrs
    *) Cookies can have their freshness reset after 10min of life. A cookie
       looses its fresh status after 20min of total life if not
@@ -12,24 +30,12 @@ order of priority):
    *) Include the level of strength of the authenticated session (password,
       old/renewed token, or 2FA auth'ed token)
    *) Integrate/use Flask-Login where possible?
-*) Add per-user timezone support
-*) Localization (Flask-Babel)
-*) Cache a user-object upon login in memcache
-*) Beef up the @logged_in decorator so that it:
-    a) checks memcache for a matching session
-    b) Logs a user out if their session has expired (or updates it accordingly)
-    c) Populates memcache with a user object upon cache miss
-*) Add authorization decorators. Each session id needs to be given an
-   authorization token that gets refreshed every 300sec. User automatically
-   gets redirected from the decorator with the missing or expired token and
-   requests an authorization token that lasts for a given app for 300sec.
-*) Unit testing framework
-*) Migrate to using setup.py instead of providing a fixed requirements.txt
-*) Scripting via Flask-Script (both shell setup and cron-like jobs)
-*) Services API example (XML, maybe protobuf)
-*) Add support for insecure and secure cookies
-*) pgmemcache
-*) Create readonly and readwrite roles for DBAs
+   *) Add authorization decorators. Each session id needs to be given an
+      authorization token that gets refreshed every 300sec. User
+      automatically gets redirected from the decorator with the missing or
+      expired token and requests an authorization token that lasts for a
+      given app for 300sec.
+   *) Logout = kill session in memcache
 
 
 Alpha sorted list of demonstrated components (some better than others):
@@ -42,6 +48,7 @@ AAA (Access, Authentication, Authorization):
 Application:
   *) Integration with other WSGI Middleware's
   *) Modularized development (filesystem layout)
+  *) Basic profile management
   *) Session management (secure cookie handling)
   *) Static assets management
 
@@ -54,6 +61,10 @@ Database (PostgreSQL):
   *) Use schemas as a management tool for setting correct permissions
   *) Use a "DBA" role for owning objects and a DBA user for per-user
      connections
+  *) Support two DBA roles per user, a read-only acount that lets a DBA see
+     the entire database (but not make changes), and a read-write account
+     that gives the user write privileges. Think of it like being an "admin"
+     and then having to "sudo to the root UID" to complete any real work.
 
 Caching (memcached):
   *) memoized functions
