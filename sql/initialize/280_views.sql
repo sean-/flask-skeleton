@@ -4,10 +4,10 @@
 -- or registration_ip. Users must always present their own email address and
 -- have their email address used to lookup their email_id.
 CREATE OR REPLACE VIEW
-aaa.user (id, active, registration_utc, max_concurrent_sessions,
+aaa.user (user_id, active, registration_utc, max_concurrent_sessions,
          default_ipv4_mask, default_ipv6_mask, timezone_id) AS
   SELECT
-    u.id, u.active, u.registration_utc, u.max_concurrent_sessions,
+    u.id AS user_id, u.active, u.registration_utc, u.max_concurrent_sessions,
     u.default_ipv4_mask, u.default_ipv6_mask, ui.timezone_id
   FROM
     shadow.aaa_user AS u LEFT OUTER JOIN aaa.user_info AS ui ON (u.id = ui.user_id);
