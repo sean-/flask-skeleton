@@ -4,6 +4,7 @@ from flask import Flask
 from flaskext.cache import Cache
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
+from pytz.gae import pytz
 from repoze.browserid.middleware import BrowserIdMiddleware
 from werkzeug.contrib.securecookie import SecureCookie
 
