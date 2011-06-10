@@ -1,10 +1,11 @@
 import json, os, re, sys
 
 from flask import Flask
+from pytz.gae import pytz # NOTE: Import gae.pytz before Babel!!!
+from flaskext.babel import Babel
 from flaskext.cache import Cache
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
-from pytz.gae import pytz
 from repoze.browserid.middleware import BrowserIdMiddleware
 from werkzeug.contrib.securecookie import SecureCookie
 
@@ -28,6 +29,7 @@ MODULES = [
 def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')
     load_config(app)
+    babel.init_app(app)
     cache.init_app(app)
     db.init_app(app)
     filters.init_app(app)
@@ -113,7 +115,8 @@ class ProxyFixupHelper(object):
                 environ['REMOTE_ADDR'] = host
         return self.app(environ, start_response)
 
-# Cache
+# Flask Extensions
+babel = Babel()
 cache = Cache()
 
 # SQL ORM Missive:
