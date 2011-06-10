@@ -6,6 +6,7 @@ local_settings.py
 bin/
 include/
 lib/
+src/
 .enter.tcsh
 .enter.local.tcsh
 
