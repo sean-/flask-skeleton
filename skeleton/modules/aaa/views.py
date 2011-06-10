@@ -81,8 +81,7 @@ def login():
             try:
                 # If the database says be vague, we'll be vague in our error
                 # messages. When the database commands it we obey, got it?
-                field = form.__getattribute__(row[1])
-                if field.name == 'vague':
+                if row[1] == 'vague':
                     # Set bogus data so that 'form.errors == True'. If brute
                     # force weren't such an issue, we'd just append a field
                     # error like below. If you want to get the specifics of
@@ -93,6 +92,7 @@ def login():
                     form.errors['EPERM'] = 'There is no intro(2) error code for web errors'
                     pass
                 else:
+                    field = form.__getattribute__(row[1])
                     field.errors.append(row[2])
             except AttributeError as e:
                 pass
