@@ -10,8 +10,7 @@ aaa.user (id, active, registration_utc, max_concurrent_sessions,
     u.id, u.active, u.registration_utc, u.max_concurrent_sessions,
     u.default_ipv4_mask, u.default_ipv6_mask, ui.timezone_id
   FROM
-    shadow.aaa_user AS u, aaa.user_info AS ui
-  WHERE u.id = ui.id;
+    shadow.aaa_user AS u LEFT OUTER JOIN aaa.user_info AS ui ON (u.id = ui.user_id);
 
 
 -- Enable this view in the email schema since access to email data should
