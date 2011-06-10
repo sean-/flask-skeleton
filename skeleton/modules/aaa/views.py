@@ -167,7 +167,7 @@ def register():
             # Update the user's timezone if they submitted a timezone
             if form.timezone.data:
                 res = ses.execute(
-                    text("INSERT INTO aaa.user_info (user_id, timezone_id) VALUES (user_id_get(:email), :tz)",
+                    text("INSERT INTO aaa.user_info (user_id, timezone_id) VALUES (get_user_id_by_email(:email), :tz)",
                          bindparams=[bindparam('email', form.email.data),
                                      bindparam('tz', form.timezone.data.id),]))
             ses.commit()

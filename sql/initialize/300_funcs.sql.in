@@ -33,7 +33,7 @@ END;$email_id_get$
 
 -- Returns the user_id for a given email address.
 CREATE OR REPLACE FUNCTION
-aaa.user_id_get(email TEXT) RETURNS INT
+aaa.get_user_id_by_email(email TEXT) RETURNS INT
   AS $user_id_get$
 DECLARE
   a_email   ALIAS FOR $1;
@@ -44,6 +44,27 @@ BEGIN
     WHERE e.email = a_email;
   RETURN v_user_id;
 END;$user_id_get$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.get_user_id_by_session_id(session_id TEXT) RETURNS INT
+  AS $user_id_by_session_id$
+DECLARE
+  a_session_id  ALIAS FOR $1;
+  v_user_id     shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT s.user_id INTO STRICT v_user_id
+    FROM shadow.aaa_session AS s
+    WHERE TRUE = TRUE
+      AND s.session_id = a_session_id
+      AND s.valid = TRUE
+      AND NOW() < s.end_utc;
+  RETURN v_user_id;
+END;$user_id_by_session_id$
   LANGUAGE plpgsql
   RETURNS NULL ON NULL INPUT
   SECURITY DEFINER;
