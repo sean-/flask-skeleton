@@ -282,7 +282,30 @@ $ses_expire$
   SECURITY DEFINER;
 
 
-CREATE OR REPLACE FUNCTION shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER AS $ses_expire$
+-- Upon setting an email address to the confirmed status, update the
+-- timestamp_confirmed to NOW().
+CREATE OR REPLACE FUNCTION
+  shadow.aaa_email_confirmation_log_upd_trg() RETURNS TRIGGER
+  AS $fixup_confirmed$
+BEGIN
+  IF OLD.timestamp_confirmed IS NULL AND NEW.confirmed = TRUE THEN
+    NEW.timestamp_confirmed := NOW();
+  END IF;
+
+  -- Can't change when we confirmed an email address
+  IF OLD.confirmed = TRUE THEN
+    NEW.timestamp_confirmed := OLD.timestamp_confirmed;
+  END IF;
+
+  RETURN NEW;
+END;
+$fixup_confirmed$
+  LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION
+shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER
+  AS $ses_expire$
 DECLARE
   ses                 RECORD;
   v_max_sessions      shadow.aaa_user.max_concurrent_sessions%TYPE;
