@@ -16,7 +16,7 @@ public.sha256(TEXT) RETURNS TEXT
 
 -- Returns the user_id for a given email address.
 CREATE OR REPLACE FUNCTION
-aaa.email_id_get(email TEXT) RETURNS INT
+aaa.get_email_id_by_email(email TEXT) RETURNS INT
   AS $email_id_get$
 DECLARE
   v_email_id shadow.aaa_email.id%TYPE;
