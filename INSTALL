@@ -253,6 +253,13 @@
     #    production, but it's really convenient to test in an SSL environment
     #    from the beginning.
 
+  a) Register:
+
+     https://127.0.0.1:5000/register
+
+     Then update shadow.aaa_email_confirmation_log:
+
+     skeleton=> UPDATE shadow.aaa_email_confirmation_log SET confirmed = TRUE WHERE id = 1;
 
 9) In production, you will need to combine all of your static assets
     together and probably have them served by nginx. Something like:
