@@ -1,12 +1,73 @@
+-- env PGDATABASE=skeleton PGUSER=skeleton_root
+
 -- Create a convenience function to SHA256 hash some data. Putting this
 -- function in the public schema since it doesn't actually change the state
 -- of any tables.
-CREATE OR REPLACE FUNCTION public.sha256(BYTEA) RETURNS TEXT AS $$
-    SELECT encode(public.digest($1, 'sha256'), 'hex')
-$$ LANGUAGE SQL STRICT IMMUTABLE;
-CREATE OR REPLACE FUNCTION public.sha256(TEXT) RETURNS TEXT AS $$
-    SELECT encode(public.digest($1, 'sha256'), 'hex')
-$$ LANGUAGE SQL STRICT IMMUTABLE;
+CREATE OR REPLACE FUNCTION
+public.sha256(BYTEA) RETURNS TEXT
+  AS $$SELECT encode(public.digest($1, 'sha256'), 'hex')$$
+  LANGUAGE SQL STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION
+public.sha256(TEXT) RETURNS TEXT
+  AS $$SELECT encode(public.digest($1, 'sha256'), 'hex')$$
+  LANGUAGE SQL STRICT IMMUTABLE;
+
+
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.get_email_id_by_email(email TEXT) RETURNS INT
+  AS $email_id_get$
+DECLARE
+  v_email_id shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT e.id INTO STRICT v_email_id
+    FROM shadow.aaa_email AS e
+    WHERE e.email = email;
+  RETURN v_email_id;
+END;$email_id_get$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.get_user_id_by_email(email TEXT) RETURNS INT
+  AS $user_id_get$
+DECLARE
+  a_email   ALIAS FOR $1;
+  v_user_id shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT e.id INTO STRICT v_user_id
+    FROM shadow.aaa_email AS e
+    WHERE e.email = a_email;
+  RETURN v_user_id;
+END;$user_id_get$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.get_user_id_by_session_id(session_id TEXT) RETURNS INT
+  AS $user_id_by_session_id$
+DECLARE
+  a_session_id  ALIAS FOR $1;
+  v_user_id     shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT s.user_id INTO STRICT v_user_id
+    FROM shadow.aaa_session AS s
+    WHERE TRUE = TRUE
+      AND s.session_id = a_session_id
+      AND s.valid = TRUE
+      AND NOW() < s.end_utc;
+  RETURN v_user_id;
+END;$user_id_by_session_id$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 -- Create a function to log a user in to the site. SECURITY DEFINER is set on
@@ -24,7 +85,10 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 -- ip_address := '11.22.33.44', session_id := 'user session id from flask',
 -- session_length := '60 minutes'::INTERVAL, secure := TRUE) AS (result BOOL, "column"
 -- TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, session_length INTERVAL, secure BOOL) RETURNS RECORD AS $aaa_login$
+CREATE OR REPLACE FUNCTION
+aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT,
+          session_length INTERVAL, secure BOOL) RETURNS RECORD
+  AS $aaa_login$
 DECLARE
   ret                 RECORD;
   a_email             ALIAS FOR email;
@@ -183,8 +247,9 @@ $aaa_login$
 --
 -- SELECT result, "column", message FROM aaa.logout(session_id := 'user
 -- session id from flask') AS (result BOOL, "column" TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.logout(session_id TEXT)
-  RETURNS RECORD AS $aaa_logout$
+CREATE OR REPLACE FUNCTION
+aaa.logout(session_id TEXT) RETURNS RECORD
+  AS $aaa_logout$
 DECLARE
   ret                 RECORD;
   a_session_id        ALIAS FOR session_id;
@@ -217,7 +282,9 @@ $aaa_logout$
 -- SELECT result, "column", message FROM aaa.register(email :=
 -- 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44')
 -- AS (result BOOL, "column" TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD AS $$
+CREATE OR REPLACE FUNCTION
+aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD
+  AS $$
 DECLARE
   ret RECORD;
   a_email      ALIAS FOR email;
@@ -267,7 +334,9 @@ $$
   SECURITY DEFINER;
 
 
-CREATE OR REPLACE FUNCTION aaa.expire_session(session_id TEXT) RETURNS BOOL AS $ses_expire$
+CREATE OR REPLACE FUNCTION
+aaa.expire_session(session_id TEXT) RETURNS BOOL
+  AS $ses_expire$
 DECLARE
   a_session_id ALIAS FOR session_id;
 BEGIN
@@ -280,7 +349,30 @@ $ses_expire$
   SECURITY DEFINER;
 
 
-CREATE OR REPLACE FUNCTION shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER AS $ses_expire$
+-- Upon setting an email address to the confirmed status, update the
+-- timestamp_confirmed to NOW().
+CREATE OR REPLACE FUNCTION
+  shadow.aaa_email_confirmation_log_upd_trg() RETURNS TRIGGER
+  AS $fixup_confirmed$
+BEGIN
+  IF OLD.timestamp_confirmed IS NULL AND NEW.confirmed = TRUE THEN
+    NEW.timestamp_confirmed := NOW();
+  END IF;
+
+  -- Can't change when we confirmed an email address
+  IF OLD.confirmed = TRUE THEN
+    NEW.timestamp_confirmed := OLD.timestamp_confirmed;
+  END IF;
+
+  RETURN NEW;
+END;
+$fixup_confirmed$
+  LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION
+shadow.aaa_session_expire_excess_trg() RETURNS TRIGGER
+  AS $ses_expire$
 DECLARE
   ses                 RECORD;
   v_max_sessions      shadow.aaa_user.max_concurrent_sessions%TYPE;
@@ -320,7 +412,9 @@ $ses_expire$ LANGUAGE plpgsql;
 -- Upon expiring a session, make sure the session's end isn't at some point
 -- in the future. By the same token, setting valid to FALSE automatically
 -- sets end_utc to NOW().
-CREATE OR REPLACE FUNCTION shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER AS $ses_fixup_end_utc$
+CREATE OR REPLACE FUNCTION
+shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER
+  AS $ses_fixup_end_utc$
 BEGIN
   IF NEW.end_utc > OLD.end_utc THEN
     RAISE EXCEPTION 'Unable to push end_utc in to the future, it can only go backwards';

@@ -4,5 +4,5 @@ endif
 
 setenv PGDATABASE skeleton
 setenv PGUSER skeleton_${USER}
-setenv PGUSER_DBA skeleton_dba
+setenv PGUSER_RW skeleton_rw_${USER}
 setenv PGUSER_ROOT pgsql

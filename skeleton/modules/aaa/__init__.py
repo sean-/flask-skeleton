@@ -29,3 +29,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def fresh_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'li' not in session:
+            session['dsturl'] = request.path
+            flash('Fresh login required for previous page')
+            return redirect(url_for('aaa.login'))
+        return f(*args, **kwargs)
+    return decorated_function

@@ -1,13 +1,18 @@
 import hashlib
 
-from flask import current_app, flash, g, redirect, render_template, request, session, url_for
+from flask import current_app, flash, g, redirect, render_template, \
+    request, session, url_for
 from sqlalchemy.sql.expression import bindparam, text
 from sqlalchemy.types import LargeBinary
 
 from skeleton import db
 from skeleton.lib import fixup_destination_url, local_request
-from .forms import LoginForm, RegisterForm
-from . import gen_session_id, module
+from .forms import LoginForm, ProfileForm, RegisterForm
+from . import fresh_login_required, gen_session_id, module
+from skeleton.models import Timezone
+from aaa.models.user import User
+from .user import get_user_id
+
 
 @module.route('/login', methods=('GET','POST'))
 def login():
@@ -78,8 +83,7 @@ def login():
             try:
                 # If the database says be vague, we'll be vague in our error
                 # messages. When the database commands it we obey, got it?
-                field = form.__getattribute__(row[1])
-                if field.name == 'vague':
+                if row[1] == 'vague':
                     # Set bogus data so that 'form.errors == True'. If brute
                     # force weren't such an issue, we'd just append a field
                     # error like below. If you want to get the specifics of
@@ -90,6 +94,7 @@ def login():
                     form.errors['EPERM'] = 'There is no intro(2) error code for web errors'
                     pass
                 else:
+                    field = form.__getattribute__(row[1])
                     field.errors.append(row[2])
             except AttributeError as e:
                 pass
@@ -134,12 +139,37 @@ def logout():
     return render_template('aaa/logout.html', dsturl=dsturl)
 
 
+@module.route('/profile', methods=('GET','POST'))
+@fresh_login_required
+def profile():
+    user_id = get_user_id(session_id = session['i'])
+    user = User.query.filter_by(user_id=user_id).first_or_404()
+    form = ProfileForm(obj=user)
+    form.timezone.query = Timezone.query.order_by(Timezone.name)
+
+    if form.validate_on_submit():
+        shapass = None
+        if form.password:
+            # Hash the password once here:
+            h = hashlib.new('sha256')
+            h.update(current_app.config['PASSWORD_HASH'])
+            h.update(form.password.data)
+            shapass = h.digest()
+
+        form.populate_obj(user)
+        user.password = shapass
+        db.session.add(user)
+        db.session.commit()
+    return render_template('aaa/profile.html', form=form)
+
+
 @module.route('/register', methods=('GET','POST'))
 def register():
     form = RegisterForm()
     if 'i' not in session:
         session['i'] = gen_session_id()
 
+    form.timezone.query = Timezone.query.order_by(Timezone.name)
     if form.validate_on_submit():
         # Form validates, execute the registration pl function
 
@@ -160,6 +190,12 @@ def register():
                     bindparam('ip', remote_addr)]))
         row = result.first()
         if row[0] == True:
+            # Update the user's timezone if they submitted a timezone
+            if form.timezone.data:
+                res = ses.execute(
+                    text("INSERT INTO aaa.user_info (user_id, timezone_id) VALUES (get_user_id_by_email(:email), :tz)",
+                         bindparams=[bindparam('email', form.email.data),
+                                     bindparam('tz', form.timezone.data.id),]))
             ses.commit()
             flash('Thanks for registering! Please check your %s email account to confirm your email address.' % (form.email.data))
             return redirect(url_for('aaa.login'))

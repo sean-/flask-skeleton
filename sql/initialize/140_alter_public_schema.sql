@@ -1,1 +1,2 @@
-ALTER SCHEMA public OWNER TO skeleton_dba;
+-- env PGDATABASE=skeleton PGUSER=pgsql
+ALTER SCHEMA public OWNER TO skeleton_root;

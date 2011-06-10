@@ -1,6 +1,8 @@
 import json, os, re, sys
 
 from flask import Flask
+from pytz.gae import pytz # NOTE: Import gae.pytz before Babel!!!
+from flaskext.babel import Babel
 from flaskext.cache import Cache
 from flaskext.debugtoolbar import DebugToolbarExtension
 from flaskext.sqlalchemy import SQLAlchemy
@@ -27,6 +29,7 @@ MODULES = [
 def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')
     load_config(app)
+    babel.init_app(app)
     cache.init_app(app)
     db.init_app(app)
     filters.init_app(app)
@@ -60,15 +63,17 @@ def load_module_models(app, module):
     if 'models' in module and module['models'] == False:
         return
 
-    model_name = module['name']
+    name = module['name']
     if app.config['DEBUG']:
-        print '[MODEL] Loading db model %s' % (model_name)
-    model_name = '%s.models' % (model_name)
+        print '[MODEL] Loading db model %s' % (name)
+    model_name = '%s.models' % (name)
     try:
         mod = __import__(model_name, globals(), locals(), [], -1)
     except ImportError as e:
         if re.match(r'No module named ', e.message) == None:
             print '[MODEL] Unable to load the model for %s: %s' % (model_name, e.message)
+        else:
+            print '[MODEL] Other(%s): %s' % (model_name, e.message)
         return False
     return True
 
@@ -78,20 +83,24 @@ def register_local_modules(app):
     sys.path.append(os.path.dirname(cur) + '/modules')
     for m in MODULES:
         mod_name = '%s.views' % m['name']
-        views = __import__(mod_name, globals(), locals(), [], -1)
-        url_prefix = None
-        if 'url_prefix' in m:
-            url_prefix = m['url_prefix']
-
-        if app.config['DEBUG']:
-            print '[VIEW ] Mapping views in %s to prefix: %s' % (mod_name, url_prefix)
-
-        # Automatically map '/' to None to prevent modules from stepping on
-        # one another.
-        if url_prefix == '/':
+        try:
+            views = __import__(mod_name, globals(), locals(), [], -1)
+        except ImportError:
+            load_module_models(app, m)
+        else:
             url_prefix = None
-        load_module_models(app, m)
-        app.register_module(views.module, url_prefix=url_prefix)
+            if 'url_prefix' in m:
+                url_prefix = m['url_prefix']
+
+            if app.config['DEBUG']:
+                print '[VIEW ] Mapping views in %s to prefix: %s' % (mod_name, url_prefix)
+
+                # Automatically map '/' to None to prevent modules from
+                # stepping on one another.
+            if url_prefix == '/':
+                url_prefix = None
+            load_module_models(app, m)
+            app.register_module(views.module, url_prefix=url_prefix)
 
 
 # Seeing 127.0.0.1 is almost never correct, promise.  We're proxied 99.9% of
@@ -112,7 +121,8 @@ class ProxyFixupHelper(object):
                 environ['REMOTE_ADDR'] = host
         return self.app(environ, start_response)
 
-# Cache
+# Flask Extensions
+babel = Babel()
 cache = Cache()
 
 # SQL ORM Missive:
