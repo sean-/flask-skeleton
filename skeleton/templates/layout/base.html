@@ -21,6 +21,7 @@
       <li><a href="{{ url_for('aaa.login', dsturl=request.url) }}">Login</a></li>
       <li><a href="{{ url_for('aaa.register') }}">Register</a></li>
 {% else %}
+      <li><a href="{{ url_for('aaa.profile') }}">Profile</a></li>
       <li><a href="{{ url_for('aaa.logout') }}">Logout</a></li>
 {% endif %}
     </ul>
@@ -38,9 +39,9 @@
     By copying from this example, I promise to make the world to be a better place and suck just a little less than it did before I woke up this morning.
     {% endblock %}
     {% if [0,1]|random == 0 %}
-    <br/><a href="http://flask.pocoo.org/"><img src="http://flask.pocoo.org/static/badges/flask-powered.png" border="0" alt="Flask powered" title="Flask powered"></a>
+    <br/><a href="http://flask.pocoo.org/"><img src="/static/flask-powered.png" border="0" alt="Flask powered" title="Flask powered"></a>
       {% else %}
-    <br/><a href="http://flask.pocoo.org/"><img src="http://flask.pocoo.org/static/badges/powered-by-flask-s.png" border="0" alt="powered by Flask" title="powered by Flask"></a>
+    <br/><a href="http://flask.pocoo.org/"><img src="/static/powered-by-flask-s.png" border="0" alt="powered by Flask" title="powered by Flask"></a>
       {% endif %}
   </div>
 </body>

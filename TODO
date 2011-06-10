@@ -1,53 +1,84 @@
-See below for a list of completed items. Things still in progress:
+See below for a list of completed items. Things still in progress (roughly in
+order of priority):
 
-*) Add per-user timezone support
 *) Cache a user-object upon login in memcache
-*) Beef up the @logged_in decorator so that it:
-   1) checks memcache for a matching session
-   2) Logs a user out if their session has expired (or updates it accordingly)
-   3) Populates memcache with a user object upon cache miss
-*) Add authorization decorators (maybe)
+*) Begin using the g request global where possible
+*) Scripting via Flask-Script (both shell setup and cron-like jobs)
+*) Change the User model so that specific attributes call the appropriate SQL
+   to update the parameters in the database. Most of User is populated via a
+   VIEW.
+*) Support gettext()
+*) Add a file that handles all of the neuances of integrating Babel and accounts
 *) Unit testing framework
 *) Migrate to using setup.py instead of providing a fixed requirements.txt
-*) Scripting via Flask-Script (both shell setup and cron-like jobs)
-*) Localization
 *) Services API example (XML, maybe protobuf)
-*) Add support for insecure and secure cookies
-*) Logout = kill session in memcache and the database
 *) pgmemcache
+*) Example of sending mail
+*) Remaining session tedium:
+   *) Beef up the @logged_in decorator so that it:
+      a) checks memcache for a matching session
+      b) Logs a user out if their session has expired (or updates it accordingly)
+      c) Populates memcache with a user object upon cache miss
+   *) Loop detection for clients that have cookies disabled
+   *) Add no cookie page
+   *) Add support for insecure and secure cookies
+   *) Reissue cookie id's older than 24hrs
+   *) Cookies can have their freshness reset after 10min of life. A cookie
+      looses its fresh status after 20min of total life if not
+      refreshed. Each cookie has a timestamp that it was issued, a min
+      renewal time and a max freshness life.
+   *) Include the level of strength of the authenticated session (password,
+      old/renewed token, or 2FA auth'ed token)
+   *) Integrate/use Flask-Login where possible?
+   *) Add authorization decorators. Each session id needs to be given an
+      authorization token that gets refreshed every 300sec. User
+      automatically gets redirected from the decorator with the missing or
+      expired token and requests an authorization token that lasts for a
+      given app for 300sec.
+   *) Logout = kill session in memcache
 
 
-Things that are demonstrated well enough (alpha sorted list):
+Alpha sorted list of demonstrated components (some better than others):
 
 AAA (Access, Authentication, Authorization):
-	*) Login (via pl functions)
-	*) Logout
-	*) Registration
+  *) Login (via pl functions)
+  *) Logout
+  *) Registration
 
 Application:
-	*) Integration with other WSGI Middleware's
-	*) Modularized development (filesystem layout)
-	*) Session management (secure cookie handling)
-	*) Static assets management
+  *) Integration with other WSGI Middleware's
+  *) Modularized development (filesystem layout)
+  *) Basic profile management
+  *) Session management (secure cookie handling)
+  *) Static assets management
 
 Database (PostgreSQL):
-	*) Database ROLEs and permissions
-	*) ORM Layer and examples
-	*) PostgreSQL pl functions
-	*) PostgreSQL schema
+  *) Give each "application class" different database users to connect as
+  *) Ordered list of .sql files to execute in order to recreate (and
+     maintain) the database.
+  *) ORM Layer and examples
+  *) PostgreSQL pl functions
+  *) Use schemas as a management tool for setting correct permissions
+  *) Use a "DBA" role for owning objects and a DBA user for per-user
+     connections
+  *) Support two DBA roles per user, a read-only acount that lets a DBA see
+     the entire database (but not make changes), and a read-write account
+     that gives the user write privileges. Think of it like being an "admin"
+     and then having to "sudo to the root UID" to complete any real work.
 
 Caching (memcached):
-	*) Objects
-	*) Views
-	*) memoized functions
+  *) memoized functions
+  *) Objects
+  *) Views
 
 Development:
-	*) Application profiling
-	*) Debugging toolbar
+  *) Application profiling
+  *) Debugging toolbar
 
 ORM (SQLAlchemy):
-	*) Use of PostgreSQL functions with SQLAlchemy
+  *) Declarative table use
+  *) Use of PostgreSQL functions with SQLAlchemy
 
 Templating (Jinja2):
-	*) Template filters
-	*) Template layout
+  *) Template filters
+  *) Template layout

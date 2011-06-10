@@ -10,6 +10,8 @@
 {% endif %}</li>
   <li><a href="{{ url_for('tag_list') }}">Tag List</a></li>
 </ul>
+<hr/>
+<p>According to the timezone information stored in the database, the local time for you is: <code>{{time}}</code></p>
 {% endblock %}
 {% block footer %}
 {{ super() }}

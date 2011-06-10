@@ -1,15 +1,28 @@
-from flask import flash, redirect, render_template, url_for
+from datetime import datetime
 
-from mod3 import module
-from mod3.forms import PageAddTagForm, PageSubmitForm
-from mod3.models import Page, PageTags, Tag
-from skeleton import db
+from flask import current_app, flash, redirect, render_template, \
+    session, url_for
+from flaskext.babel import to_user_timezone
+
+from skeleton import babel, db
 from aaa import login_required
+from aaa.user import get_user_timezone
+
+from . import module
+from .forms import PageAddTagForm, PageSubmitForm
+from .models import Page, PageTags, Tag
+
+
+@babel.timezoneselector
+def get_timezone():
+    if 'li' in session:
+        return get_user_timezone(session_id=session['i'])
 
 
 @module.route('/')
 def some_random_view():
-    return render_template('mod3/root.html')
+    t = datetime.utcnow()
+    return render_template('mod3/root.html', time=to_user_timezone(t))
 
 
 @module.route('/pages')

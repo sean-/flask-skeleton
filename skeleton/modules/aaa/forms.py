@@ -1,5 +1,6 @@
-from flaskext.wtf import BooleanField, Email, EqualTo, Form, Length, \
-    Required, PasswordField, RadioField, SubmitField, TextField, ValidationError
+from flaskext.wtf import BooleanField, Email, EqualTo, Form, IntegerField, \
+    Length, NumberRange, Optional, Required, PasswordField, QuerySelectField, \
+    RadioField, SubmitField, TextField, ValidationError
 
 class LoginForm(Form):
     email = TextField('Email', validators=[Required(), Email()])
@@ -15,13 +16,33 @@ class LoginForm(Form):
     # in a totally broken corporate environment.
 
 
+class ProfileForm(Form):
+    password = PasswordField('New Password', validators=[
+            Optional(),
+            Length(min=8, max=80),
+            EqualTo('confirm', message='Passwords must match')
+            ])
+    confirm = PasswordField('Repeat Password')
+    default_ipv4_mask = IntegerField(label='IPv4 Mask', validators=[
+            Optional(),
+            NumberRange(min=0, max=32, message='IPv4 Mask must between %(min)s and %(max)s'),
+            ])
+    default_ipv6_mask = IntegerField(label='IPv6 Mask', validators=[
+            Optional(),
+            NumberRange(min=0, max=128, message='IPv6 Mask must between %(min)s and %(max)s'),
+            ])
+    timezone = QuerySelectField(get_label='name', allow_blank=True)
+    submit = SubmitField('Update Profile')
+
+
 class RegisterForm(Form):
     email = TextField('Email Address', validators = [Email()])
-    password = PasswordField('New Password', validators = [
+    password = PasswordField('New Password', validators=[
             Required(),
             Length(min=8, max=80),
             EqualTo('confirm', message='Passwords must match')
     ])
     confirm = PasswordField('Repeat Password')
     accept_tos = BooleanField('I accept the TOS', validators = [Required()])
+    timezone = QuerySelectField(get_label='name', allow_blank=True)
     submit = SubmitField('Register')

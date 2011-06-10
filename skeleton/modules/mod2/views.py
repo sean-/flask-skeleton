@@ -2,8 +2,9 @@ from datetime import datetime, timedelta
 
 from flask import render_template, redirect, session, url_for
 
-from mod2 import module
 from skeleton import cache
+
+from . import module
 
 def user_logged_in():
     """ Returns true if the user is logged in """

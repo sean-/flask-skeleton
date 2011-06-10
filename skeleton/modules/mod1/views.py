@@ -1,10 +1,11 @@
 import random
 
 from flask import render_template, request
-from mod1 import module
-from mod1.models import H2
 
 from skeleton import cache
+
+from . import module
+from .models import H2
 
 @cache.memoize(timeout=10)
 def random_func(useless_parameter):
