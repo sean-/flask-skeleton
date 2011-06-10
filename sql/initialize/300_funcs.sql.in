@@ -3,12 +3,17 @@
 -- Create a convenience function to SHA256 hash some data. Putting this
 -- function in the public schema since it doesn't actually change the state
 -- of any tables.
-CREATE OR REPLACE FUNCTION public.sha256(BYTEA) RETURNS TEXT AS $$
-    SELECT encode(public.digest($1, 'sha256'), 'hex')
-$$ LANGUAGE SQL STRICT IMMUTABLE;
-CREATE OR REPLACE FUNCTION public.sha256(TEXT) RETURNS TEXT AS $$
-    SELECT encode(public.digest($1, 'sha256'), 'hex')
-$$ LANGUAGE SQL STRICT IMMUTABLE;
+CREATE OR REPLACE FUNCTION
+public.sha256(BYTEA) RETURNS TEXT
+  AS $$SELECT encode(public.digest($1, 'sha256'), 'hex')$$
+  LANGUAGE SQL STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION
+public.sha256(TEXT) RETURNS TEXT
+  AS $$SELECT encode(public.digest($1, 'sha256'), 'hex')$$
+  LANGUAGE SQL STRICT IMMUTABLE;
+
+
 -- Returns the user_id for a given email address.
 CREATE OR REPLACE FUNCTION
 aaa.email_id_get(email TEXT) RETURNS INT
@@ -59,7 +64,10 @@ END;$user_id_get$
 -- ip_address := '11.22.33.44', session_id := 'user session id from flask',
 -- session_length := '60 minutes'::INTERVAL, secure := TRUE) AS (result BOOL, "column"
 -- TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT, session_length INTERVAL, secure BOOL) RETURNS RECORD AS $aaa_login$
+CREATE OR REPLACE FUNCTION
+aaa.login(email TEXT, password BYTEA, ip_address INET, session_id TEXT,
+          session_length INTERVAL, secure BOOL) RETURNS RECORD
+  AS $aaa_login$
 DECLARE
   ret                 RECORD;
   a_email             ALIAS FOR email;
@@ -218,8 +226,9 @@ $aaa_login$
 --
 -- SELECT result, "column", message FROM aaa.logout(session_id := 'user
 -- session id from flask') AS (result BOOL, "column" TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.logout(session_id TEXT)
-  RETURNS RECORD AS $aaa_logout$
+CREATE OR REPLACE FUNCTION
+aaa.logout(session_id TEXT) RETURNS RECORD
+  AS $aaa_logout$
 DECLARE
   ret                 RECORD;
   a_session_id        ALIAS FOR session_id;
@@ -252,7 +261,9 @@ $aaa_logout$
 -- SELECT result, "column", message FROM aaa.register(email :=
 -- 'user@example.com', password := 'myfailpw', ip_address := '11.22.33.44')
 -- AS (result BOOL, "column" TEXT, message TEXT);
-CREATE OR REPLACE FUNCTION aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD AS $$
+CREATE OR REPLACE FUNCTION
+aaa.register(email TEXT, password BYTEA, ip_address INET) RETURNS RECORD
+  AS $$
 DECLARE
   ret RECORD;
   a_email      ALIAS FOR email;
@@ -302,7 +313,9 @@ $$
   SECURITY DEFINER;
 
 
-CREATE OR REPLACE FUNCTION aaa.expire_session(session_id TEXT) RETURNS BOOL AS $ses_expire$
+CREATE OR REPLACE FUNCTION
+aaa.expire_session(session_id TEXT) RETURNS BOOL
+  AS $ses_expire$
 DECLARE
   a_session_id ALIAS FOR session_id;
 BEGIN
@@ -378,7 +391,9 @@ $ses_expire$ LANGUAGE plpgsql;
 -- Upon expiring a session, make sure the session's end isn't at some point
 -- in the future. By the same token, setting valid to FALSE automatically
 -- sets end_utc to NOW().
-CREATE OR REPLACE FUNCTION shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER AS $ses_fixup_end_utc$
+CREATE OR REPLACE FUNCTION
+shadow.aaa_session_fixup_end_utc_trg() RETURNS TRIGGER
+  AS $ses_fixup_end_utc$
 BEGIN
   IF NEW.end_utc > OLD.end_utc THEN
     RAISE EXCEPTION 'Unable to push end_utc in to the future, it can only go backwards';
