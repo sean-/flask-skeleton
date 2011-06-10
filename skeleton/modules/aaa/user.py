@@ -22,8 +22,11 @@ def get_user_id(email = None, session_id = None):
 
 
 @cache.memoize()
-def get_user_timezone(user_id = None, email = None):
+def get_user_timezone(user_id = None, email = None, session_id = None):
     """ Helper function that returns the user's timezone """
+    if session_id is not None:
+        user_id = get_user_id(session_id=session_id)
+
     if email is not None:
         user_id = get_user_id(email)
 
