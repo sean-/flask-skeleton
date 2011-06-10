@@ -1,0 +1,22 @@
+{% extends "layout/base.html" %}
+{% block title %}aaa/profile{% endblock %}
+{% block content %}
+<h1>Profile</h1>
+
+{% if form.errors %}<p class="error"><strong>Unable to update profile. See error messages below.</strong>{% endif %}
+{% from "_formhelpers.html" import render_field %}
+<form method="POST" action="">
+  <dl>
+    {{ render_field(form.password) }}
+    {{ render_field(form.confirm) }}
+    {{ render_field(form.default_ipv4_mask) }}
+    {{ render_field(form.default_ipv6_mask) }}
+    {{ render_field(form.timezone) }}
+    <dd>{{ form.submit }}</dd>
+  </dl>
+  {{ form.hidden_tag() }}
+</form>
+</p>
+{% endblock %}
+
+

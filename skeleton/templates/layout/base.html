@@ -21,6 +21,7 @@
       <li><a href="{{ url_for('aaa.login', dsturl=request.url) }}">Login</a></li>
       <li><a href="{{ url_for('aaa.register') }}">Register</a></li>
 {% else %}
+      <li><a href="{{ url_for('aaa.profile') }}">Profile</a></li>
       <li><a href="{{ url_for('aaa.logout') }}">Logout</a></li>
 {% endif %}
     </ul>

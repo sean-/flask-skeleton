@@ -10,6 +10,8 @@ from skeleton.lib import fixup_destination_url, local_request
 from .forms import LoginForm, ProfileForm, RegisterForm
 from . import fresh_login_required, gen_session_id, module
 from skeleton.models import Timezone
+from aaa.models.user import User
+from .user import get_user_id
 
 
 @module.route('/login', methods=('GET','POST'))
@@ -135,6 +137,30 @@ def logout():
         flash('You were logged out')
 
     return render_template('aaa/logout.html', dsturl=dsturl)
+
+
+@module.route('/profile', methods=('GET','POST'))
+@fresh_login_required
+def profile():
+    user_id = get_user_id(session_id = session['i'])
+    user = User.query.filter_by(user_id=user_id).first_or_404()
+    form = ProfileForm(obj=user)
+    form.timezone.query = Timezone.query.order_by(Timezone.name)
+
+    if form.validate_on_submit():
+        shapass = None
+        if form.password:
+            # Hash the password once here:
+            h = hashlib.new('sha256')
+            h.update(current_app.config['PASSWORD_HASH'])
+            h.update(form.password.data)
+            shapass = h.digest()
+
+        form.populate_obj(user)
+        user.password = shapass
+        db.session.add(user)
+        db.session.commit()
+    return render_template('aaa/profile.html', form=form)
 
 
 @module.route('/register', methods=('GET','POST'))
