@@ -9,6 +9,39 @@ $$ LANGUAGE SQL STRICT IMMUTABLE;
 CREATE OR REPLACE FUNCTION public.sha256(TEXT) RETURNS TEXT AS $$
     SELECT encode(public.digest($1, 'sha256'), 'hex')
 $$ LANGUAGE SQL STRICT IMMUTABLE;
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.email_id_get(email TEXT) RETURNS INT
+  AS $email_id_get$
+DECLARE
+  v_email_id shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT e.id INTO STRICT v_email_id
+    FROM shadow.aaa_email AS e
+    WHERE e.email = email;
+  RETURN v_email_id;
+END;$email_id_get$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
+
+
+-- Returns the user_id for a given email address.
+CREATE OR REPLACE FUNCTION
+aaa.user_id_get(email TEXT) RETURNS INT
+  AS $user_id_get$
+DECLARE
+  a_email   ALIAS FOR $1;
+  v_user_id shadow.aaa_email.id%TYPE;
+BEGIN
+  SELECT e.id INTO STRICT v_user_id
+    FROM shadow.aaa_email AS e
+    WHERE e.email = a_email;
+  RETURN v_user_id;
+END;$user_id_get$
+  LANGUAGE plpgsql
+  RETURNS NULL ON NULL INPUT
+  SECURITY DEFINER;
 
 
 -- Create a function to log a user in to the site. SECURITY DEFINER is set on
