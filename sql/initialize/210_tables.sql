@@ -12,7 +12,7 @@ CREATE TABLE public.timezone (
 -- A table housing user-related information where there is no-harm if "a
 -- SELECT *'s worth of information" is accessed or updated by a web user.
 CREATE TABLE aaa.user_info (
-  id INT NOT NULL,
+  user_id INT NOT NULL,
   timezone_id INT
 );
 
