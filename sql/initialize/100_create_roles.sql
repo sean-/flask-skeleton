@@ -1,5 +1,10 @@
 -- env PGDATABASE=template1 PGUSER=pgsql
 
+-- The skeleton_shadow user can't log in. This is very much intended. The
+-- skeleton_shadow user is the user that various functions execute with
+-- (think "setuid" privs for certain pl/pgsql functions).
+CREATE ROLE skeleton_shadow NOLOGIN;
+
 -- Lots of www processes (use pgbouncer!!!)
 CREATE ROLE skeleton_www CONNECTION LIMIT 200 LOGIN;
 
@@ -13,15 +18,10 @@ CREATE ROLE skeleton_www CONNECTION LIMIT 200 LOGIN;
 --
 -- "Only you can prevent forrest fires."
 CREATE ROLE skeleton_dba NOLOGIN;
-CREATE ROLE skeleton_root CONNECTION LIMIT 1 LOGIN;
+CREATE ROLE skeleton_root CONNECTION LIMIT 1 LOGIN IN GROUP skeleton_shadow;
 
 -- There should only ever be one connection as the email user. This limits
 -- the possibility of accidentally sending out duplicate emails. The paranoid
 -- can use this as a way of preventing duplicate jobs from running and
 -- accidentally emailing out duplicates.
 CREATE ROLE skeleton_email CONNECTION LIMIT 1 LOGIN;
-
--- Note that the skeleton_shadow user can't log in. This is very much
--- intended. The skeleton_shadow user is the user that various functions
--- execute with (think "setuid" privs for certain pl/pgsql functions).
-CREATE ROLE skeleton_shadow NOLOGIN;
