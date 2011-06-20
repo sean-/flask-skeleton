@@ -1,6 +1,15 @@
-if ( -d /opt/local/lib/postgresql91/bin ) then
-  setenv PATH /opt/local/lib/postgresql91/bin:${PATH}
-endif
-
-# If you're on a Mac, uncomment the following
-# setenv PGUSER_ROOT postgres
+# Mac OS-X entries:
+switch ($OSTYPE)
+case "darwin*":
+  # Use the right PostgreSQL path
+  if ( -d /opt/local/lib/postgresql92/bin ) then
+    setenv PATH /opt/local/lib/postgresql92/bin:${PATH}
+  else if ( -d /opt/local/lib/postgresql91/bin ) then
+    setenv PATH /opt/local/lib/postgresql91/bin:${PATH}
+  else if ( -d /opt/local/lib/postgresql90/bin ) then
+    setenv PATH /opt/local/lib/postgresql90/bin:${PATH}
+  else if ( -d /opt/local/lib/postgresql84/bin ) then
+    setenv PATH /opt/local/lib/postgresql84/bin:${PATH}
+  endif
+  setenv PGUSER_ROOT postgres
+endsw
