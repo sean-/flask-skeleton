@@ -121,18 +121,17 @@
 
    # l2dba 101.
 
-   # Environment variables that should be set by your .enter.local.tcsh:
-   # PGUSER_RW, PGUSER and PGDATABASE.
-   setenv PGUSER_DBA skeleton_root
-   setenv PGUSER_ROOT pgsql
+   # Environment variables that should be set by your .enter.tcsh and
+   # .enter.local.tcsh: PGUSER, PGUSER_DBA, PGUSER_ROOT and PGDATABASE.
 
    # Create the base roles
    psql -d template1 -U ${PGUSER_ROOT} -1f sql/initialize/100_create_roles.sql
 
-   # Create your user roles (use two, one for read-only and the other for
-   # read-write activities)
+   # Create your user role. To make changes, type:
+   #
+   # BEGIN; SET transaction_read_only = OFF; /* ... */
    psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE ${PGUSER} CONNECTION LIMIT 2 LOGIN;"
-   psql -d template1 -U ${PGUSER_ROOT} -c "CREATE ROLE ${PGUSER_RW} CONNECTION LIMIT 1 LOGIN;"
+   psql -d template1 -U ${PGUSER_ROOT} -c "ALTER ROLE ${PGUSER} IN DATABASE ${PGDATABASE} SET default_transaction_read_only = ON;"
 
    # Add the ROLEs to their respective DBA ROLE/GROUPs
    psql -d template1 -U ${PGUSER_ROOT} -c "ALTER GROUP skeleton_dba ADD USER ${PGUSER};"
