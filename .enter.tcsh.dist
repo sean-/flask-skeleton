@@ -3,6 +3,15 @@
 # Don't do anything if a virtual environment is already loaded
 if ( ${?VIRTUAL_ENV} == "1" ) exit 0
 
+# The skeleton database
+setenv PGDATABASE skeleton
+# The account you connect as
+setenv PGUSER skeleton_${USER}
+# The owner of ${PGDATABASE}'s objects
+setenv PGUSER_DBA skeleton_dba
+# Owner of the entire database instance
+setenv PGUSER_ROOT pgsql
+
 # Load a local .tcsh file
 if (-o .enter.local.tcsh && -P22: .enter.local.tcsh == "0") source .enter.local.tcsh
 

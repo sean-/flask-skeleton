@@ -2,7 +2,5 @@ if ( -d /opt/local/lib/postgresql91/bin ) then
   setenv PATH /opt/local/lib/postgresql91/bin:${PATH}
 endif
 
-setenv PGDATABASE skeleton
-setenv PGUSER skeleton_${USER}
-setenv PGUSER_RW skeleton_rw_${USER}
-setenv PGUSER_ROOT pgsql
+# If you're on a Mac, uncomment the following
+# setenv PGUSER_ROOT postgres
