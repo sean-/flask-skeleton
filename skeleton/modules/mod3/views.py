@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from datetime import datetime
 
 from flask import current_app, flash, redirect, render_template, \
@@ -29,6 +30,7 @@ def some_random_view():
 def page_list():
     entries = Page.query.order_by(Page.url).all()
     return render_template('mod3/pages.html', pages=entries)
+
 
 @module.route('/page/submit', methods=('GET','POST'))
 @login_required

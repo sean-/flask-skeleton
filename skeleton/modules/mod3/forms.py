@@ -1,6 +1,8 @@
+# -*- coding:utf-8 -*-
 import re
 
 from flaskext.wtf import Form, Regexp, Required, SubmitField, TextField, URL
+
 
 class PageAddTagForm(Form):
     tag = TextField('Tag', validators=[

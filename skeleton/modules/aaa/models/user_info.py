@@ -1,4 +1,9 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from skeleton import db
+
 
 class UserInfo(db.Model):
     timezone_id = db.Column(db.Integer, db.ForeignKey('public.timezone.id'))

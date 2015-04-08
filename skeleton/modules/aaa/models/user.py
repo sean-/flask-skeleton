@@ -1,4 +1,9 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from skeleton import db
+
 
 class User(db.Model):
     active = db.Column(db.Boolean)

@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import json, os, re, sys
 
 from flask import Flask
@@ -24,6 +25,7 @@ MODULES = [
     {'name': 'mod2', 'url_prefix': '/mod2'  },
     {'name': 'mod3', 'url_prefix': '/mod3'  },
 ]
+
 
 # Create the Skeleton app
 def create_app(name = __name__):

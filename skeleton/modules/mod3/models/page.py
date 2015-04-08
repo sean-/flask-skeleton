@@ -1,6 +1,11 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from skeleton import db
 
 from .page_tags import PageTags
+
 
 class Page(db.Model):
     id = db.Column(db.Integer, primary_key=True)

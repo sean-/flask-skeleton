@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import random
 
 from flask import render_template, request
@@ -7,11 +8,13 @@ from skeleton import cache
 from . import module
 from .models import H2
 
+
 @cache.memoize(timeout=10)
 def random_func(useless_parameter):
     """ Cache a random number for 10 seconds """
     # Ignore the useless_parameter for this example
     return random.randrange(0, 100000)
+
 
 @module.route('/mod1_view')
 def index(name = None):
@@ -28,10 +31,12 @@ def index(name = None):
     unique_values = len(cached_values)
     return render_template('mod1/mod1_view.html', name=name, cached_values=cached_values, unique_values=unique_values)
 
+
 @module.route('/list_all')
 def list_all():
     entries = H2.query.all()
     return render_template('mod1/list_all.html', entries=entries)
+
 
 @module.route('/list_one')
 def list_one():

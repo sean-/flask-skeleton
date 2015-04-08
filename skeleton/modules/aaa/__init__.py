@@ -11,6 +11,7 @@ LOGIN_SUFFIX_BLACKLIST = {
     '/login': True
 }
 
+
 def gen_session_id():
     """ Generates a session ID """
     # Be kind to future support people and developers by using a base32
@@ -18,6 +19,7 @@ def gen_session_id():
     # at the lack of ambiguity regarding "one", "ell", "zero" and
     # "ohh". You can thank me later.
     return base64.b32encode(M2Crypto.m2.rand_bytes(current_app.config['SESSION_BYTES']))
+
 
 def login_required(f):
     @wraps(f)
