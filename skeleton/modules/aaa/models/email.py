@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from skeleton import db
 
+
 class Email(db.Model):
     __table__ = db.Table(
         'email', db.metadata,

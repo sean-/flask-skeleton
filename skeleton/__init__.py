@@ -26,6 +26,7 @@ MODULES = [
     {'name': 'mod3', 'url_prefix': '/mod3'  },
 ]
 
+
 # Create the Skeleton app
 def create_app(name = __name__):
     app = Flask(__name__, static_path='/static')

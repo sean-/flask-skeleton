@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from skeleton import db
 
+
 class User(db.Model):
     active = db.Column(db.Boolean)
     default_ipv4_mask = db.Column(db.Integer)

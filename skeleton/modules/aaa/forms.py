@@ -3,6 +3,7 @@ from flaskext.wtf import BooleanField, Email, EqualTo, Form, IntegerField, \
     Length, NumberRange, Optional, Required, PasswordField, QuerySelectField, \
     RadioField, SubmitField, TextField, ValidationError
 
+
 class LoginForm(Form):
     email = TextField('Email', validators=[Required(), Email()])
     password = PasswordField('Password', validators=[Required()])

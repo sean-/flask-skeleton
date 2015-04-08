@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from skeleton import db
 
+
 class H1(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     val = db.Column(db.String)

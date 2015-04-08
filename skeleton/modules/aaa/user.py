@@ -5,6 +5,7 @@ from sqlalchemy.sql.expression import bindparam, text
 from skeleton import cache, db
 from .models.user_info import UserInfo
 
+
 @cache.memoize()
 def get_user_id(email = None, session_id = None):
     """ Helper function that returns the user_id for a given email address """

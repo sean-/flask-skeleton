@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from skeleton import db
 
+
 # Note the conflicting variable and table name.
 class H2(db.Model):
     __table__ = db.Table(

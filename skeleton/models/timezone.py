@@ -4,6 +4,7 @@ sys.setdefalutencoding = 'utf-8'
 
 from skeleton import db
 
+
 class Timezone(db.Model):
     __table__ = db.Table(
         'timezone', db.metadata,

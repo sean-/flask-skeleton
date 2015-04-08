@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from skeleton import db
 
+
 class UserInfo(db.Model):
     timezone_id = db.Column(db.Integer, db.ForeignKey('public.timezone.id'))
     timezone = db.relationship('Timezone', primaryjoin='Timezone.id==UserInfo.timezone_id')
