@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from datetime import datetime, timedelta
 
 from flask import render_template, redirect, session, url_for

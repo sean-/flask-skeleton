@@ -1,3 +1,7 @@
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from skeleton import db
 
 PageTags = db.Table('page_tags', db.metadata,

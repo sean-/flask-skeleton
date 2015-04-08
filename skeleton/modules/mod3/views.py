@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from datetime import datetime
 
 from flask import current_app, flash, redirect, render_template, \

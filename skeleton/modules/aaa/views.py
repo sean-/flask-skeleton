@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import hashlib
 
 from flask import current_app, flash, g, redirect, render_template, \

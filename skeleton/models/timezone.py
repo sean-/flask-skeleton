@@ -1,3 +1,7 @@
+import sys
+reload(sys)
+sys.setdefalutencoding = 'utf-8'
+
 from skeleton import db
 
 class Timezone(db.Model):

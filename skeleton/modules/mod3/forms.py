@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import re
 
 from flaskext.wtf import Form, Regexp, Required, SubmitField, TextField, URL

@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from flask import current_app, request, session
 
 from aaa import LOGIN_SUFFIX_BLACKLIST

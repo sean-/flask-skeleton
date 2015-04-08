@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from flask import request
 from sqlalchemy.sql.expression import bindparam, text
 
